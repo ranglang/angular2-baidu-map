@@ -18,6 +18,7 @@ export interface MarkerOptions {
     enableMessage?: boolean;
     autoDisplayInfoWindow?: boolean;
     enableDragging?: boolean;
+    category ?: number;
 }
 
 export interface MapDefaultOptions {

@@ -5,6 +5,7 @@ import {setGeoCtrl} from './controls/GeoControl';
 import {setScaleCtrl} from './controls/ScaleControl';
 import {setOverviewMapCtrl} from './controls/OverviewMapControl';
 import {setNavigationCtrl} from './controls/NavigationControl';
+import {MarkerIcon} from "./enum/ControlAnchor";
 
 export const reCenter = function(map: any, opts: MapOptions) {
     var BMap: any = (<any>window)['BMap'];
@@ -38,6 +39,9 @@ export const createInstance = function(opts: MapOptions, element: any) {
     return map;
 };
 
+
+
+
 export const createMarker = function(marker: MarkerOptions, pt: any) {
     var BMap: any = (<any>window)['BMap'];
     var opts: any = {};
@@ -45,13 +49,69 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
         var icon = new BMap.Icon(marker.icon, new BMap.Size(marker.width, marker.height));
         opts['icon'] = icon;
     }
+
+
+    if(marker.category) {
+        switch(marker.category) {
+            case MarkerIcon.STOP : {
+                 var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
+                    offset: new BMap.Size(10, 25),
+                    imageOffset: new BMap.Size(0, 0)
+                });
+                opts['icon'] = icon;
+                break;
+            }
+            default : {
+                var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
+                    offset: new BMap.Size(10, 25),
+                    imageOffset: new BMap.Size(0, 0 - 10 * 25)
+
+                    // imageOffset: new BMap.Size(0, 0 - 10 * 25)
+                });
+                opts['icon'] = icon;
+            }
+
+        }
+    }
     if (marker.enableDragging) {
         opts['enableDragging'] = true;
     }
     return new BMap.Marker(pt, opts);
 };
 
+
+// "stopLatBd" :
+//     "stopLngBd" : ,
+//     "stopName" : "英伦名苑",
+//     "stopOrder" : 2,
+//     "allStopOrder" : null
+
+// previousMarkers: PreviousMarker[],
+export const redrawPolyline = function (map: any, polyline: any, opts: MapOptions) {
+    var BMap: any = (<any>window)['BMap'];
+    if(polyline) {
+        map.removeOverlay(polyline);
+    }
+    let polylines = new BMap.Polyline(
+        [
+            new BMap.Point(113.9504241, 22.5703887),
+            new BMap.Point(113.9529404, 22.5600119),
+            new BMap.Point(113.9547538, 22.5493955)
+
+        ], {
+            strokeColor: 'blue',
+            strokeWeight: 3,
+            strokeOpacity: 0.5
+        }
+    );
+    this.polyline = polylines;
+    map.addOverlay(polylines);
+}
+
 export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[], opts: MapOptions) {
+
+    console.log('redrawMarkers');
+    console.log(opts.markers);
     var BMap: any = (<any>window)['BMap'];
     var self = this;
 
@@ -98,4 +158,7 @@ export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[
         previousMarker.listeners.push(openInfoWindowListener);
         marker2.addEventListener('click', openInfoWindowListener);
     });
+
+
+    this.map.setViewport(opts.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
 };

@@ -7,7 +7,7 @@ import { MapStatus } from '../enum/MapStatus';
 import { defaultOfflineOpts, defaultOpts } from '../defaults';
 
 import { loader } from '../Loader';
-import { reCenter, reZoom, redrawMarkers, createInstance } from '../CoreOperations';
+import {reCenter, reZoom, redrawMarkers, createInstance, redrawPolyline} from '../CoreOperations';
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +46,7 @@ export class BaiduMap implements OnInit, OnChanges {
     map: any;
     offlineWords: string;
     previousMarkers: PreviousMarker[] = [];
+    polyline: any;
 
     constructor(private el: ElementRef) { }
 
@@ -56,20 +57,28 @@ export class BaiduMap implements OnInit, OnChanges {
     }
 
     ngOnChanges(changes: { [propertyName: string]: SimpleChange }) {
+        console.log('ngOnChanges');
         let baiduMap = (<any>window)['baiduMap'];
         if (!baiduMap || baiduMap.status !== MapStatus.LOADED) {
+            console.log('return ');
             return;
         }
         if (changes['options'].isFirstChange() && !this.map) {
+            console.log('isFirstChanges');
             return;
         }
         let opts = changes['options'].currentValue;
+        console.log('opts');
+
         reCenter(this.map, opts);
         reZoom(this.map, opts);
+        console.log('redrawMarkers');
         redrawMarkers.bind(this)(this.map, this.previousMarkers, opts);
+        redrawPolyline.bind(this)(this.map, this.polyline, opts)
     }
 
     _draw() {
+        console.log('drawing again');
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
         this.map = createInstance(options, this.el.nativeElement);
         this.map.addEventListener('click', e => {
@@ -77,6 +86,7 @@ export class BaiduMap implements OnInit, OnChanges {
         });
         this.onMapLoaded.emit(this.map);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, options);
+        redrawPolyline.bind(this)(this.map, this.polyline, options)
     }
 }
 
