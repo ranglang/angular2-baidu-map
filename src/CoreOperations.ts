@@ -89,29 +89,27 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
 // previousMarkers: PreviousMarker[],
 export const redrawPolyline = function (map: any, polyline: any, opts: MapOptions) {
     var BMap: any = (<any>window)['BMap'];
+    let array = opts.routes ? opts.routes : []
     if(polyline) {
         map.removeOverlay(polyline);
     }
-    let polylines = new BMap.Polyline(
-        [
-            new BMap.Point(113.9504241, 22.5703887),
-            new BMap.Point(113.9529404, 22.5600119),
-            new BMap.Point(113.9547538, 22.5493955)
-
-        ], {
-            strokeColor: 'blue',
-            strokeWeight: 3,
-            strokeOpacity: 0.5
-        }
-    );
-    this.polyline = polylines;
-    map.addOverlay(polylines);
+    if(array.length > 0 ) {
+        let polylines = new BMap.Polyline(
+            array.map(a => {
+                return new BMap.Point(a.longitude, a.latitude);
+            }), {
+                strokeColor: 'blue',
+                strokeWeight: 3,
+                strokeOpacity: 0.5
+            }
+        );
+        this.polyline = polylines;
+        map.addOverlay(polylines);
+    }
 }
 
 export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[], opts: MapOptions) {
 
-    console.log('redrawMarkers');
-    console.log(opts.markers);
     var BMap: any = (<any>window)['BMap'];
     var self = this;
 

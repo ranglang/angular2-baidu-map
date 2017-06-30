@@ -7,6 +7,10 @@ import {GeolocationControlOptions} from '../controls/GeoControl';
 import {OverviewMapControlOptions} from '../controls/OverviewMapControl';
 import {NavigationControlOptions} from '../controls/NavigationControl';
 
+export interface RouteOptions {
+    longitude: number;
+    latitude: number;
+}
 export interface MarkerOptions {
     longitude: number;
     latitude: number;
@@ -33,6 +37,7 @@ export interface MapDefaultOptions {
 export interface MapOptions extends MapDefaultOptions {
     center: { longitude: number, latitude: number };
     markers?: MarkerOptions[];
+    routes?: RouteOptions[];
 }
 
 export interface OfflineOptions {
