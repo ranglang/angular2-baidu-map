@@ -126,14 +126,11 @@ export  const reCheckEditPolygon = function (
             polygonOptions: styleOptions,
             rectangleOptions: styleOptions
         });
-
         let dListner = drawingManager.addEventListener('overlaycomplete', polygoncomplete);
         self.previousPolygon = {polygon: undefined, listeners: [dListner]}
-
         console.log(drawingManager);
             drawingManager.open();
             drawingManager.setDrawingMode(BMAP_DRAWING_POLYGON);
-        // draw(drawingManager, BMAP_DRAWING_POLYGON);
     }
 }
 
@@ -214,41 +211,41 @@ export const createAutoComplete = function (
         previousAutoComplete.listeners.push(listner);
         previousAutoComplete.listeners.push(listner2);
     }
+};
 
+export const createMarkerEdit = function(marker: MarkerOptions, pt: any) {
+    var BMap: any = (<any>window)['BMap'];
+    var opts: any = {};
+    if (marker.icon) {
+        var icon = new BMap.Icon(marker.icon, new BMap.Size(marker.width, marker.height));
+        opts['icon'] = icon;
+    }
 
+    if(marker.category) {
+        switch(marker.category) {
+            case MarkerIcon.STOP : {
+                var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
+                    offset: new BMap.Size(10, 25),
+                    imageOffset: new BMap.Size(0, 0)
+                });
+                opts['icon'] = icon;
+                break;
+            }
+            default : {
+                var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
+                    offset: new BMap.Size(10, 25),
+                    imageOffset: new BMap.Size(0, 0 - 10 * 25)
+                });
+                opts['icon'] = icon;
+            }
 
-    // if (marker.icon) {
-    //     var icon = new BMap.Icon(marker.icon, new BMap.Size(marker.width, marker.height));
-    //     opts['icon'] = icon;
-    // }
-    //
-    //
-    // if(marker.category) {
-    //     switch(marker.category) {
-    //         case MarkerIcon.STOP : {
-    //             var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
-    //                 offset: new BMap.Size(10, 25),
-    //                 imageOffset: new BMap.Size(0, 0)
-    //             });
-    //             opts['icon'] = icon;
-    //             break;
-    //         }
-    //         default : {
-    //             var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
-    //                 offset: new BMap.Size(10, 25),
-    //                 imageOffset: new BMap.Size(0, 0 - 10 * 25)
-    //
-    //                 // imageOffset: new BMap.Size(0, 0 - 10 * 25)
-    //             });
-    //             opts['icon'] = icon;
-    //         }
-    //
-    //     }
-    // }
-    // if (marker.enableDragging) {
-    //     opts['enableDragging'] = true;
-    // }
-    // return new BMap.Marker(pt, opts);
+        }
+    }
+
+    if (marker.enableDragging) {
+        opts['enableDragging'] = true;
+    }
+    return new BMap.Marker(pt, opts);
 };
 export const createMarker = function(marker: MarkerOptions, pt: any) {
     var BMap: any = (<any>window)['BMap'];

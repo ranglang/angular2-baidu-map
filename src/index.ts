@@ -1,13 +1,16 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 
 import { BaiduMap } from './components/map';
+import {EditRoute} from "./components/editRoute";
 
 @NgModule({
     declarations: [
-        BaiduMap
+        BaiduMap,
+        EditRoute,
     ],
     exports: [
-        BaiduMap
+        BaiduMap,
+        EditRoute,
     ]
 })
 export class BaiduMapModule {}

@@ -9,13 +9,13 @@ import { defaultOfflineOpts, defaultOpts } from '../defaults';
 import { loader } from '../Loader';
 import {
     reCenter, reZoom, redrawMarkers, createInstance, redrawPolyline, createAutoComplete,
-    reCheckEditPolygon, reCreatePolygon
+    reCheckEditPolygon, reCreatePolygon, createMarkerEdit
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
-    selector: 'baidu-map',
+    selector: 'edit-route',
     styles: [`
         .offlinePanel{
             width: 100%;
@@ -37,7 +37,7 @@ import {PreviousPolygon} from "../interfaces/PreviousPolygon";
         </div>
     `
 })
-export class BaiduMap implements OnInit, OnChanges {
+export class EditRoute implements OnInit, OnChanges {
 
     @Input() ak: string;
     @Input() protocol: string;
@@ -62,7 +62,7 @@ export class BaiduMap implements OnInit, OnChanges {
     ngOnInit() {
         let offlineOpts: OfflineOptions = Object.assign({}, defaultOfflineOpts, this.offlineOpts);
         this.offlineWords = offlineOpts.txt;
-        loader(this.ak, offlineOpts, this._draw.bind(this), this.protocol, 'baidu-map');
+        loader(this.ak, offlineOpts, this._draw.bind(this), this.protocol, 'edit-route');
     }
 
     ngOnChanges(changes: { [propertyName: string]: SimpleChange }) {
@@ -76,11 +76,11 @@ export class BaiduMap implements OnInit, OnChanges {
         let opts = changes['options'].currentValue;
         reCenter(this.map, opts);
         reZoom(this.map, opts);
-        redrawMarkers.bind(this)(this.map, this.previousMarkers, opts);
-        redrawPolyline.bind(this)(this.map, this.polyline, opts)
-        createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
-        reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
-        reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
+        createMarkerEdit.bind(this)(this.map, this.previousMarkers, opts);
+        // redrawPolyline.bind(this)(this.map, this.polyline, opts)
+        // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
+        // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
+        // reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
     }
 
     _draw() {
@@ -90,11 +90,10 @@ export class BaiduMap implements OnInit, OnChanges {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-        redrawMarkers.bind(this)(this.map, this.previousMarkers, options);
-        redrawPolyline.bind(this)(this.map, this.polyline, options)
-        createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)
-        reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
-        reCreatePolygon.bind(this)(this.map, this.previousPolygon, options)
+        createMarkerEdit.bind(this)(this.map, this.previousMarkers, options);
+        // redrawPolyline.bind(this)(this.map, this.polyline, options)
+        // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)
+        // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
+        // reCreatePolygon.bind(this)(this.map, this.previousPolygon, options)
     }
 }
-

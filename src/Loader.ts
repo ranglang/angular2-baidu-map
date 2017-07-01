@@ -2,14 +2,11 @@ import {MapObjct} from './interfaces/MapObjct';
 import {MapStatus} from './enum/MapStatus';
 import {OfflineOptions} from './interfaces/Options';
 
-export const loader = function(ak: string, offlineOpts: OfflineOptions, callback: Function, protocol: string) {
+export const loader = function(ak: string, offlineOpts: OfflineOptions, callback: Function, protocol: string, id: string) {
     let realProtocol = protocol || location.protocol;
     let MAP_URL: string = `${realProtocol}//api.map.baidu.com/api?v=2.0&ak=${ak}&callback=baidumapinit&s=${realProtocol === 'https:' ? 1 : 0}`;
 
     let DrawingManager_MAP_URL : string = `${realProtocol}//api.map.baidu.com/library/DrawingManager/1.4/src/DrawingManager_min.js`;
-
-    // <script type="text/javascript"
-    // src="http:"></script>
     let win: any = (<any>window);
 
     let baiduMap: MapObjct = win['baiduMap'];
@@ -26,7 +23,16 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
     win['baidumapinit'] = function() {
         win['baiduMap'].status = MapStatus.LOADED;
         callback();
-        createTagDrawingManager();
+
+        // let baiduMap: MapObjct = win['baiduMap'];
+        var BMapLib: any = (<any>window)['BMapLib'];
+        if(!BMapLib) {
+            console.log('loading drawing')
+            createTagDrawingManager();
+        } else {
+            console.log(' skip loadding drawing');
+        }
+
         win['baiduMap'].callbacks.forEach((cb: Function) => cb());
         win['baiduMap'].callbacks = [];
     };
@@ -48,7 +54,6 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
         document.body.appendChild(script);
     };
 
-
     let createTag = function() {
         let script = document.createElement('script');
         script.type = 'text/javascript';
@@ -56,7 +61,7 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
         script.onerror = function() {
             Array.prototype
                 .slice
-                .call(document.querySelectorAll('baidu-map div'))
+                .call(document.querySelectorAll(id + ' div'))
                 .forEach(function(node: any) {
                     node.style.opacity = 1;
                 });
