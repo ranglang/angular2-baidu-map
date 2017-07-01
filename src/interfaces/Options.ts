@@ -1,6 +1,6 @@
 import {Size} from './Size';
 import {Icon} from './Icon';
-import {ControlAnchor} from '../enum/ControlAnchor';
+import {ControlAnchor, MarkerIcon} from '../enum/ControlAnchor';
 
 import {ScaleControlOptions} from '../controls/ScaleControl';
 import {GeolocationControlOptions} from '../controls/GeoControl';
@@ -32,12 +32,15 @@ export interface MapDefaultOptions {
     enableScrollWheelZoom?: boolean;
     geolocationCtrl?: boolean | GeolocationControlOptions;
     zoom?: number;
+    enableAutoComplete ?: boolean;
+    enableEditPolygon ?: boolean;
 }
 
 export interface MapOptions extends MapDefaultOptions {
     center: { longitude: number, latitude: number };
     markers?: MarkerOptions[];
     routes?: RouteOptions[];
+    polygon?: RouteOptions[];
 }
 
 export interface OfflineOptions {

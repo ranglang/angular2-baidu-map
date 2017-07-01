@@ -6,6 +6,10 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
     let realProtocol = protocol || location.protocol;
     let MAP_URL: string = `${realProtocol}//api.map.baidu.com/api?v=2.0&ak=${ak}&callback=baidumapinit&s=${realProtocol === 'https:' ? 1 : 0}`;
 
+    let DrawingManager_MAP_URL : string = `${realProtocol}//api.map.baidu.com/library/DrawingManager/1.4/src/DrawingManager_min.js`;
+
+    // <script type="text/javascript"
+    // src="http:"></script>
     let win: any = (<any>window);
 
     let baiduMap: MapObjct = win['baiduMap'];
@@ -18,12 +22,32 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
     }
 
     win['baiduMap'] = { status: MapStatus.LOADING, callbacks: [] };
+
     win['baidumapinit'] = function() {
         win['baiduMap'].status = MapStatus.LOADED;
         callback();
+        createTagDrawingManager();
         win['baiduMap'].callbacks.forEach((cb: Function) => cb());
         win['baiduMap'].callbacks = [];
     };
+
+    let createTagDrawingManager = function() {
+        let script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = DrawingManager_MAP_URL;
+        script.onerror = function() {
+            // Array.prototype
+            //     .slice
+            //     .call(document.querySelectorAll('baidu-map div'))
+            //     .forEach(function(node: any) {
+            //         node.style.opacity = 1;
+            //     });
+            // document.body.removeChild(script);
+            setTimeout(createTagDrawingManager, offlineOpts.retryInterval);
+        };
+        document.body.appendChild(script);
+    };
+
 
     let createTag = function() {
         let script = document.createElement('script');
