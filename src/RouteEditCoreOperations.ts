@@ -101,18 +101,8 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 export const redrawEditPolyline = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
     let route = this;
-    console.log('redrawEditPolyline ........');
 
-    // if(previousMarkers) {
-    //     if(!previousMarkers.markers) {
-    //         return;
-    //     }
-    //
-    // }else {
-    //     return;
-    // }
-
-    if(previousMarkers) {
+    if (previousMarkers) {
         console.log('has previousMarkers');
         console.log(previousMarkers);
 

@@ -22,6 +22,24 @@ export const reZoom = function(map: any, opts: MapOptions) {
     }
 };
 
+export const createInstance1 = function(opts: MapOptions, element: any) {
+    var BMap: any = (<any>window)['BMap'];
+    // create map instance
+    var map = new BMap.Map(element);
+
+    // init map, set central location and zoom level
+    map.centerAndZoom(new BMap.Point(opts.center.longitude, opts.center.latitude), opts.zoom);
+
+    setNavigationCtrl(map, opts);
+    setScaleCtrl(map, opts);
+    setOverviewMapCtrl(map, opts);
+    if (opts.enableScrollWheelZoom) {
+        //enable scroll wheel zoom
+        map.enableScrollWheelZoom();
+    }
+    setGeoCtrl(map, opts);
+    return map;
+};
 export const createInstance = function(opts: MapOptions, element: any) {
     var BMap: any = (<any>window)['BMap'];
     // create map instance
