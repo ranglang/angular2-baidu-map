@@ -1,7 +1,7 @@
 import { Component, SimpleChange, Input, Output, EventEmitter, OnInit, OnChanges, ChangeDetectionStrategy, ElementRef } from '@angular/core';
 
 import { MapOptions, OfflineOptions } from '../interfaces/Options';
-import {PreviousAutoComplete, PreviousMarker} from '../interfaces/PreviousMarker';
+import {PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine} from '../interfaces/PreviousMarker';
 import { MapStatus } from '../enum/MapStatus';
 
 import { defaultOfflineOpts, defaultOpts } from '../defaults';
@@ -12,7 +12,7 @@ import {
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
-import {redrawMarkersEdit} from "../RouteEditCoreOperations";
+import {redrawMarkersEdit, redrawPolyLinEdit} from "../RouteEditCoreOperations";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,8 +55,13 @@ export class EditRoute implements OnInit, OnChanges {
     offlineWords: string;
     previousMarkers: PreviousMarker[] = [];
     previousAutoComplete : PreviousAutoComplete;
+
+    previousPolyLine : PreviousEditPolyLine;
+
     previousPolygon : PreviousPolygon;
     polyline: any;
+
+    markerHandler: MarkerHandler;
 
     constructor(private el: ElementRef) { }
 
@@ -80,7 +85,7 @@ export class EditRoute implements OnInit, OnChanges {
         console.log('ngChanges: opts')
         console.log(opts.markers)
 
-        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, opts);
+        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, opts);
         // redrawPolyline.bind(this)(this.map, this.polyline, opts)
         // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
         // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
@@ -94,10 +99,19 @@ export class EditRoute implements OnInit, OnChanges {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, options);
+        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, options);
         // redrawPolyline.bind(this)(this.map, this.polyline, options)
         // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)
         // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
         // reCreatePolygon.bind(this)(this.map, this.previousPolygon, options)
+    }
+
+
+    _drawPolyLine() {
+        console.log('_drawPolyLine');
+        let options: MapOptions = Object.assign({}, defaultOpts, this.options);
+        console.log('this.markerHandler');
+        console.log(this.markerHandler);
+        redrawPolyLinEdit.bind(this)(this.map, this.previousPolyLine, this.markerHandler, options )
     }
 }
