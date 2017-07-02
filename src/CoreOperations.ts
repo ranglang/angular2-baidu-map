@@ -253,7 +253,6 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
     }
 
     if(marker.category) {
-        console.log('marker.category'  + marker.category + ' VS ' + MarkerIcon.ROUTE);
         switch(marker.category) {
             case MarkerIcon.STOP : {
                  var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {

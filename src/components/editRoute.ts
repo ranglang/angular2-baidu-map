@@ -3,8 +3,11 @@ import {
     OnDestroy
 } from '@angular/core';
 
-import { MapOptions, OfflineOptions } from '../interfaces/Options';
-import {PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine} from '../interfaces/PreviousMarker';
+import {MapOptions, OfflineOptions, MarkerOptions} from '../interfaces/Options';
+import {
+    PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine,
+    PreviousStateMarker
+} from '../interfaces/PreviousMarker';
 import { MapStatus } from '../enum/MapStatus';
 
 import { defaultOfflineOpts, defaultOpts } from '../defaults';
@@ -17,20 +20,24 @@ import {
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
-import {redrawMarkersEdit, redrawPolyLinEdit} from "../RouteEditCoreOperations";
+import {redrawPolyLinEdit, redrawEditState} from "../RouteEditCoreOperations";
 import {AppRxState} from "../app/ngrx";
 import {Observable, Subscription} from "rxjs";
 import {EditRouteActions} from "./editRoute.actions";
+import {sampleTime} from "rxjs/operator/sampleTime";
+import {BaiduMap} from "./map";
 
 
 export interface EditRouteRxState {
     startIndex: number;
     endIndex: number;
+    markers: MarkerOptions[];
 }
 
 export const initialState: EditRouteRxState  = {
     startIndex: -1,
     endIndex: -1,
+    markers: [],
 }
 
 
@@ -87,7 +94,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     map: any;
     offlineWords: string;
-    previousMarkers: PreviousMarker[] = [];
+    // previousMarkers: PreviousMarker[] = [];
     previousAutoComplete : PreviousAutoComplete;
 
     previousPolyLine : PreviousEditPolyLine;
@@ -97,6 +104,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     markerHandler: MarkerHandler;
 
+    previousMarkers: PreviousStateMarker;
+
 
     private map$ : Observable<EditRouteRxState>;
 
@@ -105,22 +114,27 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
                 private  action: EditRouteActions,
                 private store: Store<AppRxState>,
     ) {
+
         this.map$= this.store.select(res => {
-            console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-            console.log(res);
             return res.routeEdit;
         });
 
         this._subRes = this.map$.subscribe((res) => {
-            console.log('///////////////////////////////////////////');
-            console.log(res);
+            this._redrawState(res);
         })
     }
+
 
     ngOnInit() {
         let offlineOpts: OfflineOptions = Object.assign({}, defaultOfflineOpts, this.offlineOpts);
         this.offlineWords = offlineOpts.txt;
         loader(this.ak, offlineOpts, this._draw.bind(this), this.protocol, 'edit-route');
+    }
+
+
+    _redrawState(state: EditRouteRxState ) {
+        let s = {...state, markers: this.options ? this.options.markers: []}
+        redrawEditState.bind(this)(this.map, this.previousMarkers, s);
     }
 
     ngOnChanges(changes: { [propertyName: string]: SimpleChange }) {
@@ -134,10 +148,10 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let opts = changes['options'].currentValue;
         reCenter(this.map, opts);
         reZoom(this.map, opts);
-        console.log('ngChanges: opts')
-        console.log(opts.markers)
+        let s = {...initialState, markers: opts.markers}
+        this._redrawState.bind(this)(this.map, this.previousMarkers, s)
 
-        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, opts);
+        // redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, opts);
         // redrawPolyline.bind(this)(this.map, this.polyline, opts)
         // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
         // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
@@ -151,7 +165,11 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, options);
+
+        let s = {...initialState, markers: this.options.markers}
+        this._redrawState.bind(this)(this.map, this.previousMarkers, s)
+
+        // redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, options);
         // redrawPolyline.bind(this)(this.map, this.polyline, options)
         // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)
         // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
@@ -165,11 +183,19 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
         console.log('this.markerHandler');
         console.log(this.markerHandler);
-        redrawPolyLinEdit.bind(this)(this.map, this.previousPolyLine, this.markerHandler, options )
+        // redrawPolyLinEdit.bind(this)(this.map, this.previousPolyLine, this.markerHandler, options )
     }
 
-    _setStart(i: number) {
-        console.log('dispatch set start: ' + i);
+    _setStart(point: any) {
+        console.log('_setStart');
+        console.log(point);
+        let i = this.options.markers.findIndex(res => res.longitude === point.lng && res.latitude === point.lat);
+
+        console.log('start index: ' + i);
+
+        // this.options.markers.filter(res => );
+
+        // console.log('dispatch set start: ' + i);
         this.store.dispatch(this.action.setStart(i));
     }
 

@@ -1,6 +1,6 @@
 import {MapOptions, MarkerOptions} from './interfaces/Options';
 import {
-    PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine,
+    PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine, PreviousStateMarker,
 } from './interfaces/PreviousMarker';
 
 import {setGeoCtrl} from './controls/GeoControl';
@@ -11,7 +11,7 @@ import {MarkerIcon} from "./enum/ControlAnchor";
 import {BaiduMap} from "./components/map";
 import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 import {createMarker} from "./CoreOperations";
-import {EditRoute} from "./components/editRoute";
+import {EditRoute, EditRouteRxState} from "./components/editRoute";
 
       let getAllWaitPointsBetweenPoints = function (point1, point2, point_list) {
         let startIndex = undefined;
@@ -98,17 +98,29 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 
 }
 
-export const redrawMarkersEdit = function(map: any, previousMarkers: PreviousMarker[], markerHandler: MarkerHandler, opts: MapOptions) {
-
-    var self = this as EditRoute ;
-
-    if(! markerHandler) {
-        self.markerHandler = {
-        }
-        console.log(self.markerHandler);
+ // markerHandler: MarkerHandler
+export const redrawEditState = function(map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState ) {
+    let route = this;
+    console.log('redrawEditState .......');
+    var BMap: any = (<any>window)['BMap'];
+    if(!BMap) {
+        console.log('BMap is undefined');
+        return;
     }
 
-    var BMap: any = (<any>window)['BMap'];
+
+    if (previousMarkers) {
+        previousMarkers.markers.forEach(markerState => {
+            map.removeOverlay(markerState.marker)
+        });
+
+        previousMarkers.markers.length = 0;
+    } else {
+        route.previousMarkers = {
+            markers: []
+        }
+    }
+
     let start_marker_icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
         offset: new BMap.Size(10, 25),
         imageOffset: new BMap.Size(0, 0 - 10 * 25)
@@ -119,130 +131,211 @@ export const redrawMarkersEdit = function(map: any, previousMarkers: PreviousMar
         imageOffset: new BMap.Size(0, 0)
     });
 
-   let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
-
-
-    previousMarkers.forEach(function({marker, listeners}) {
-        listeners.forEach(listener => { marker.removeEventListener('click', listener); });
-        map.removeOverlay(marker);
-    });
-
-    previousMarkers.length = 0;
-
-    if (!opts.markers) {
-        return;
-    }
-
-    opts.markers.forEach(function(marker: MarkerOptions, index ) {
-        console.log('marker category');
-        console.log(marker.category);
-        let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-        let item_start;
-        let item_destination;
-        let  item_unstart;
-        let  item_undestination;
-
-        let cxm = new BMap.ContextMenu();
-
-        let onMenuItemUnSetStartListener = function () {
-            let self = this;
-            console.log('unSetStart');
-            console.log('markerHandler.startMarker');
-            console.log(markerHandler.startMarker);
-            let menuItem = cxm.getItem(1);
-            cxm.removeItem(menuItem);
-            cxm.addItem(item_start);
-            self.setIcon(trace_point_icon);
-        }
-
-        item_unstart = new BMap.MenuItem('取消起点', onMenuItemUnSetStartListener.bind(marker2));
+    let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
 
         let onMenuItemSetStartListener = function () {
+            console.log('onMenuItemSetStartListener ');
+            route._setStart(this.getPosition());
+
+
             // markerHandler.startMarker = this;
 
-            self._setStart(index);
-
-            this.setIcon(start_marker_icon);
-            self.markerHandler.startMarker = this;
-
-            let menuItem = cxm.getItem(0);
-            cxm.removeItem(menuItem);
-            let menuItem1 = cxm.getItem(1);
-            cxm.removeItem(menuItem);
-            cxm.removeItem(menuItem1);
-            cxm.addItem(item_unstart);
-            cxm.addItem(item_destination);
-            self._drawPolyLine()
+            // self._setStart(index);
+            //
+            // this.setIcon(start_marker_icon);
+            // self.markerHandler.startMarker = this;
+            //
+            // let menuItem = cxm.getItem(0);
+            // cxm.removeItem(menuItem);
+            // let menuItem1 = cxm.getItem(1);
+            // cxm.removeItem(menuItem);
+            // cxm.removeItem(menuItem1);
+            // cxm.addItem(item_unstart);
+            // cxm.addItem(item_destination);
+            // self._drawPolyLine()
         }
 
-        let onMenuItemSetDestinationListener = function () {
-            console.log('setDestination');
+        //  item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
+        // item_undestination = new BMap.MenuItem('取消终点', onMenuItemUnSetDestinationListener.bind(marker2));
 
-            self.markerHandler.endMarker = this;
+    route.previousMarkers.markers.length = 0;
+    // route.previousMarkers.markers = [];
+    let a = [];
 
-            this.setIcon(destination_marker_icon);
+    if(state.markers) {
+        state.markers.forEach(function(marker: MarkerOptions, index ) {
+            let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+            if(index === state.startIndex) {
+                marker2.setIcon(start_marker_icon);
+            } else if(index === state.endIndex){
+                marker2.setIcon(destination_marker_icon);
+            } else {
+                marker2.setIcon(trace_point_icon)
+                let cxm = new BMap.ContextMenu();
+                let item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
+                cxm.addItem(item_start);
+                marker2.addContextMenu(cxm);
+            }
 
-
-            let menuItem = cxm.getItem(0);
-            cxm.removeItem(menuItem);
-            let menuItem1 = cxm.getItem(1);
-            cxm.removeItem(menuItem);
-            cxm.removeItem(menuItem1);
-            cxm.addItem(item_start);
-            cxm.addItem(item_undestination);
-            self._drawPolyLine()
-        }
-
-        let onMenuItemUnSetDestinationListener = function () {
-            let self = this
-            console.log('setDestination');
-            self.setIcon(trace_point_icon);
-
-            let menuItem = cxm.getItem(0);
-            cxm.removeItem(menuItem);
-            let menuItem1 = cxm.getItem(1);
-            cxm.removeItem(menuItem);
-            cxm.removeItem(menuItem1);
-
-            cxm.addItem(item_start);
-            cxm.addItem(item_destination);
-
-            console.log(self.point);
-        }
-
-         item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
-         item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
-
-        item_undestination = new BMap.MenuItem('取消终点', onMenuItemUnSetDestinationListener.bind(marker2));
-
-
-        cxm.addItem(item_start);
-        cxm.addItem(item_destination);
-        marker2.addContextMenu(cxm);
-
-        let previousMarker: PreviousMarker = { marker: marker2,cxm: cxm, listeners: [] };
-        previousMarkers.push(previousMarker);
-
-        map.addOverlay(marker2);
-        if (!marker.title && !marker.content) {
-            return;
-        }
-        let msg = `<p>${marker.title || ''}</p><p>${marker.content || ''}</p>`;
-        let infoWindow2 = new BMap.InfoWindow(msg, {
-            enableMessage: !!marker.enableMessage
+            a.push({
+                marker: marker2,
+                listeners: []
+            });
+            map.addOverlay(marker2);
         });
-        if (marker.autoDisplayInfoWindow) {
-            marker2.openInfoWindow(infoWindow2);
-        }
-        let openInfoWindowListener = function() {
-            this.openInfoWindow(infoWindow2);
-        };
-        previousMarker.listeners.push(openInfoWindowListener);
-        marker2.addEventListener('click', openInfoWindowListener);
-    });
 
-    if(opts.markers.length > 0){
-        map.setViewport(opts.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
+    if(state.markers.length > 0){
+        map.setViewport(state.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
     }
-};
+        route.previousMarkers.markers =a;
+    }
+}
+
+// export const redrawMarkersEdit = function(map: any, previousMarkers: PreviousMarker[], markerHandler: MarkerHandler, opts: MapOptions) {
+//
+//     var self = this as EditRoute ;
+//
+//     if(! markerHandler) {
+//         self.markerHandler = {
+//         }
+//         console.log(self.markerHandler);
+//     }
+//
+//     var BMap: any = (<any>window)['BMap'];
+//     let start_marker_icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
+//         offset: new BMap.Size(10, 25),
+//         imageOffset: new BMap.Size(0, 0 - 10 * 25)
+//     });
+//
+//     let destination_marker_icon = new BMap.Icon('/assets/img/markers_yellow.png', new BMap.Size(23, 25), {
+//         offset: new BMap.Size(10, 25),
+//         imageOffset: new BMap.Size(0, 0)
+//     });
+//
+//    let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
+//
+//
+//     previousMarkers.forEach(function({marker, listeners}) {
+//         listeners.forEach(listener => { marker.removeEventListener('click', listener); });
+//         map.removeOverlay(marker);
+//     });
+//
+//     previousMarkers.length = 0;
+//
+//     if (!opts.markers) {
+//         return;
+//     }
+//
+//     opts.markers.forEach(function(marker: MarkerOptions, index ) {
+//         console.log('marker category');
+//         console.log(marker.category);
+//         let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+//         let item_start;
+//         let item_destination;
+//         let  item_unstart;
+//         let  item_undestination;
+//
+//         let cxm = new BMap.ContextMenu();
+//
+//         let onMenuItemUnSetStartListener = function () {
+//             let self = this;
+//             console.log('unSetStart');
+//             console.log('markerHandler.startMarker');
+//             console.log(markerHandler.startMarker);
+//             let menuItem = cxm.getItem(1);
+//             cxm.removeItem(menuItem);
+//             cxm.addItem(item_start);
+//             self.setIcon(trace_point_icon);
+//         }
+//
+//         item_unstart = new BMap.MenuItem('取消起点', onMenuItemUnSetStartListener.bind(marker2));
+//
+//         let onMenuItemSetStartListener = function () {
+//             // markerHandler.startMarker = this;
+//
+//             self._setStart(index);
+//
+//             this.setIcon(start_marker_icon);
+//             self.markerHandler.startMarker = this;
+//
+//             let menuItem = cxm.getItem(0);
+//             cxm.removeItem(menuItem);
+//             let menuItem1 = cxm.getItem(1);
+//             cxm.removeItem(menuItem);
+//             cxm.removeItem(menuItem1);
+//             cxm.addItem(item_unstart);
+//             cxm.addItem(item_destination);
+//             self._drawPolyLine()
+//         }
+//
+//         let onMenuItemSetDestinationListener = function () {
+//             console.log('setDestination');
+//
+//             self.markerHandler.endMarker = this;
+//
+//             this.setIcon(destination_marker_icon);
+//
+//
+//             let menuItem = cxm.getItem(0);
+//             cxm.removeItem(menuItem);
+//             let menuItem1 = cxm.getItem(1);
+//             cxm.removeItem(menuItem);
+//             cxm.removeItem(menuItem1);
+//             cxm.addItem(item_start);
+//             cxm.addItem(item_undestination);
+//             self._drawPolyLine()
+//         }
+//
+//         let onMenuItemUnSetDestinationListener = function () {
+//             let self = this
+//             console.log('setDestination');
+//             self.setIcon(trace_point_icon);
+//
+//             let menuItem = cxm.getItem(0);
+//             cxm.removeItem(menuItem);
+//             let menuItem1 = cxm.getItem(1);
+//             cxm.removeItem(menuItem);
+//             cxm.removeItem(menuItem1);
+//
+//             cxm.addItem(item_start);
+//             cxm.addItem(item_destination);
+//
+//             console.log(self.point);
+//         }
+//
+//          item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
+//          item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
+//
+//         item_undestination = new BMap.MenuItem('取消终点', onMenuItemUnSetDestinationListener.bind(marker2));
+//
+//
+//         cxm.addItem(item_start);
+//         cxm.addItem(item_destination);
+//         marker2.addContextMenu(cxm);
+//
+//         let previousMarker: PreviousMarker = { marker: marker2,cxm: cxm, listeners: [] };
+//         previousMarkers.push(previousMarker);
+//
+//         map.addOverlay(marker2);
+//         if (!marker.title && !marker.content) {
+//             return;
+//         }
+//         let msg = `<p>${marker.title || ''}</p><p>${marker.content || ''}</p>`;
+//         let infoWindow2 = new BMap.InfoWindow(msg, {
+//             enableMessage: !!marker.enableMessage
+//         });
+//         if (marker.autoDisplayInfoWindow) {
+//             marker2.openInfoWindow(infoWindow2);
+//         }
+//         let openInfoWindowListener = function() {
+//             this.openInfoWindow(infoWindow2);
+//         };
+//         previousMarker.listeners.push(openInfoWindowListener);
+//         marker2.addEventListener('click', openInfoWindowListener);
+//     });
+//
+//     if(opts.markers.length > 0){
+//         map.setViewport(opts.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
+//     }
+// };
 
