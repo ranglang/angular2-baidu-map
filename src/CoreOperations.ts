@@ -66,8 +66,6 @@ export  const reCreatePolygon = function (
             }
         );
 
-        console.log('polygon');
-        console.log(polyline);
         map.addOverlay(polyline);
         previousPolygon = {polygon: polyline, listeners: []}
         map.setViewport(array);
@@ -112,7 +110,6 @@ export  const reCheckEditPolygon = function (
             strokeStyle: 'solid'
         };
 
-        console.log('map');
         console.log(map);
         console.log('BMAP_ANCHOR_TOP_RIGHT: ' + BMAP_ANCHOR_TOP_RIGHT);
         let drawingManager = new BMapLib.DrawingManager(map, {
@@ -255,8 +252,8 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
         opts['icon'] = icon;
     }
 
-
     if(marker.category) {
+        console.log('marker.category'  + marker.category + ' VS ' + MarkerIcon.ROUTE);
         switch(marker.category) {
             case MarkerIcon.STOP : {
                  var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
@@ -264,6 +261,11 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
                     imageOffset: new BMap.Size(0, 0)
                 });
                 opts['icon'] = icon;
+                break;
+            }
+            case MarkerIcon.ROUTE : {
+                let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
+                opts['icon'] = trace_point_icon;
                 break;
             }
             default : {
@@ -303,9 +305,8 @@ export const redrawPolyline = function (map: any, polyline: any, opts: MapOption
     }
 }
 
-
 export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[], opts: MapOptions) {
-
+    console.log('redrawMarkers....');
     var BMap: any = (<any>window)['BMap'];
     var self = this;
 
@@ -365,3 +366,5 @@ export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[
         map.setViewport(opts.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
     }
 };
+
+

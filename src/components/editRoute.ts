@@ -12,6 +12,7 @@ import {
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
+import {redrawMarkersEdit} from "../RouteEditCoreOperations";
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,7 +77,10 @@ export class EditRoute implements OnInit, OnChanges {
         let opts = changes['options'].currentValue;
         reCenter(this.map, opts);
         reZoom(this.map, opts);
-        createMarkerEdit.bind(this)(this.map, this.previousMarkers, opts);
+        console.log('ngChanges: opts')
+        console.log(opts.markers)
+
+        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, opts);
         // redrawPolyline.bind(this)(this.map, this.polyline, opts)
         // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
         // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
@@ -90,7 +94,7 @@ export class EditRoute implements OnInit, OnChanges {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-        createMarkerEdit.bind(this)(this.map, this.previousMarkers, options);
+        redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, options);
         // redrawPolyline.bind(this)(this.map, this.polyline, options)
         // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)
         // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
