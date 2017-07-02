@@ -20,7 +20,7 @@ import {
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
-import {redrawEditPolyline, redrawPolyLinEdit, redrawEditState} from "../RouteEditCoreOperations";
+import {redrawEditPolyline, redrawPolyLinEdit, redrawEditState, redrawDriveRoute} from "../RouteEditCoreOperations";
 import {AppRxState} from "../app/ngrx";
 import {Observable, Subscription} from "rxjs";
 import {EditRouteActions} from "./editRoute.actions";
@@ -32,12 +32,14 @@ export interface EditRouteRxState {
     startIndex: number;
     endIndex: number;
     markers: MarkerOptions[];
+    enableSearch: boolean;
 }
 
 export const initialState: EditRouteRxState  = {
     startIndex: -1,
     endIndex: -1,
     markers: [],
+    enableSearch: false
 }
 
 
@@ -53,6 +55,11 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
         case EditRouteActions.SET_END: {
             return {...state, endIndex: action.payload};
+        }
+
+        case EditRouteActions.SET_DRIVE: {
+             // endIndex: action.payload
+            return {...state, enableSearch: true};
         }
         default: {
             return state;
@@ -149,6 +156,14 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         <div class="edit-line-status"  [class.active]="hasLine$ | async" ></div>
         <div id="rightEndCircle lineInfo"  class="circle"  [class.active]="hasLine$ |async" ></div>
         <div class="startText lineInfo"   [class.active]="hasMarkerEnd$ | async">终点</div>
+        
+        <!--[ngClass]="{'ui-hide': (!(DATA.start_marker && DATA.end_marker)) || DATA.edit_mode }"-->
+        <div class="lineEditArea" [class.ui-hide]="!(hasLine$ |async)">
+            <!--uButton-->
+            <!--icon="fa-magic" -->
+            <!--uTooltip="自动推荐轨迹点" tooltipPosition="bottom"-->
+            <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="_drawSearch()" >自</button>
+        </div>
     </div>
     <div id="container" #map>
     
@@ -248,6 +263,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let s = {...state, markers: this.options ? this.options.markers: []}
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
+        redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
     }
 
     ngOnChanges(changes: { [propertyName: string]: SimpleChange }) {
@@ -264,6 +280,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let s = {...initialState, markers: opts.markers}
         redrawEditState.bind(this)(this.map, this.previousMarkers, s)
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
+        redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
 
         // redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, opts);
         // redrawPolyline.bind(this)(this.map, this.polyline, opts)
@@ -284,7 +301,9 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let s = {...initialState, markers: this.options.markers}
         redrawEditState.bind(this)(this.map, this.previousMarkers, s)
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
+        redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
 
+        // export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
 
         // redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s);
 
@@ -295,7 +314,9 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         // reCreatePolygon.bind(this)(this.map, this.previousPolygon, options)
     }
 
-
+    _drawSearch() {
+        this.store.dispatch(this.action.setDrive());
+    }
 
     _drawPolyLine() {
         console.log('_drawPolyLine');

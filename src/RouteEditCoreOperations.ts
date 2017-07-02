@@ -51,7 +51,6 @@ import {EditRoute, EditRouteRxState} from "./components/editRoute";
 //             let temp = resArray[0];
       };
 
-
 export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousEditPolyLine, markerHandler: MarkerHandler, opts: MapOptions) {
 
     var BMap: any = (<any>window)['BMap'];
@@ -97,6 +96,45 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
     }
 
 }
+
+export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
+    var BMap: any = (<any>window)['BMap'];
+
+    if(state.enableSearch) {
+        console.log('enableSearch');
+        let driving = new BMap.DrivingRoute(map, {
+            renderOptions: {map, autoViewport: true, enableDragging: true},
+            onPolylinesSet: (routes) => {
+                console.log(' search result');
+
+                let searchRoute = routes[0].getPolyline();
+                console.log(searchRoute);
+                console.log(map);
+                map.addOverlay(searchRoute);
+
+                // let array = [];
+                // let a = searchRoute.getPath();
+                // for (let i = 0; i < a.length; i++) {
+                //   array = array.concat(a[i]);
+                // }
+                // _DATA.trace_point = array;
+            },
+            onSearchComplete: function (results) {
+                console.log('onSearchComplete')
+                // _DATA.drivingRoute = driving;
+            },
+            onMarkersSet: function (routes) {
+                // _Bmap.removeOverlay(routes[0].marker);
+                // _Bmap.removeOverlay(routes[1].marker);
+            }
+        });
+        driving.search(previousMarkers.markers[state.startIndex].marker.getPosition(), previousMarkers.markers[state.startIndex].marker.getPosition(), {});
+    }else {
+        console.log('Search diabled');
+    }
+}
+
+
 
 export const redrawEditPolyline = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];

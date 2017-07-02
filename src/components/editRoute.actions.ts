@@ -27,4 +27,11 @@ export class EditRouteActions {
             payload: i,
         };
     }
+
+    static SET_DRIVE = '[ROUTE EDIT ] Set Drive';
+    public setDrive(): Action {
+        return {
+            type: EditRouteActions.SET_DRIVE,
+        };
+    }
 }
