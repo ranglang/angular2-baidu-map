@@ -1,4 +1,7 @@
-import { Component, SimpleChange, Input, Output, EventEmitter, OnInit, OnChanges, ChangeDetectionStrategy, ElementRef } from '@angular/core';
+import {
+    Component, SimpleChange, Input, Output, EventEmitter, OnInit, OnChanges, ChangeDetectionStrategy, ElementRef,
+    OnDestroy
+} from '@angular/core';
 
 import { MapOptions, OfflineOptions } from '../interfaces/Options';
 import {PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine} from '../interfaces/PreviousMarker';
@@ -7,12 +10,44 @@ import { MapStatus } from '../enum/MapStatus';
 import { defaultOfflineOpts, defaultOpts } from '../defaults';
 
 import { loader } from '../Loader';
+import {Store} from '@ngrx/store';
+import { Action } from '@ngrx/store';
 import {
     reCenter, reZoom, redrawMarkers, createInstance, redrawPolyline, createAutoComplete,
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
 import {redrawMarkersEdit, redrawPolyLinEdit} from "../RouteEditCoreOperations";
+import {AppRxState} from "../app/ngrx";
+import {Observable, Subscription} from "rxjs";
+import {EditRouteActions} from "./editRoute.actions";
+
+
+export interface EditRouteRxState {
+    startIndex: number;
+    endIndex: number;
+}
+
+export const initialState: EditRouteRxState  = {
+    startIndex: -1,
+    endIndex: -1,
+}
+
+
+export function editRouteReducer(state = initialState, action: any): EditRouteRxState  {
+    switch (action.type) {
+        case EditRouteActions.SHOW_MARKER: {
+            return state;
+        }
+
+        case EditRouteActions.SET_START: {
+            return {...state, startIndex: action.payload};
+        }
+        default: {
+            return state;
+        }
+    }
+}
 
 @Component({
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,8 +73,7 @@ import {redrawMarkersEdit, redrawPolyLinEdit} from "../RouteEditCoreOperations";
         </div>
     `
 })
-export class EditRoute implements OnInit, OnChanges {
-
+export class EditRoute implements OnInit, OnChanges, OnDestroy {
     @Input() ak: string;
     @Input() protocol: string;
     @Input() options: MapOptions;
@@ -63,7 +97,25 @@ export class EditRoute implements OnInit, OnChanges {
 
     markerHandler: MarkerHandler;
 
-    constructor(private el: ElementRef) { }
+
+    private map$ : Observable<EditRouteRxState>;
+
+    private  _subRes: Subscription;
+    constructor(private el: ElementRef,
+                private  action: EditRouteActions,
+                private store: Store<AppRxState>,
+    ) {
+        this.map$= this.store.select(res => {
+            console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+            console.log(res);
+            return res.routeEdit;
+        });
+
+        this._subRes = this.map$.subscribe((res) => {
+            console.log('///////////////////////////////////////////');
+            console.log(res);
+        })
+    }
 
     ngOnInit() {
         let offlineOpts: OfflineOptions = Object.assign({}, defaultOfflineOpts, this.offlineOpts);
@@ -107,6 +159,7 @@ export class EditRoute implements OnInit, OnChanges {
     }
 
 
+
     _drawPolyLine() {
         console.log('_drawPolyLine');
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
@@ -114,4 +167,18 @@ export class EditRoute implements OnInit, OnChanges {
         console.log(this.markerHandler);
         redrawPolyLinEdit.bind(this)(this.map, this.previousPolyLine, this.markerHandler, options )
     }
+
+    _setStart(i: number) {
+        console.log('dispatch set start: ' + i);
+        this.store.dispatch(this.action.setStart(i));
+    }
+
+
+    ngOnDestroy(): void {
+        if(this._subRes ) {
+            this._subRes.unsubscribe();
+        }
+    }
+
 }
+

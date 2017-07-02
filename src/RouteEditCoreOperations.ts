@@ -11,6 +11,7 @@ import {MarkerIcon} from "./enum/ControlAnchor";
 import {BaiduMap} from "./components/map";
 import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 import {createMarker} from "./CoreOperations";
+import {EditRoute} from "./components/editRoute";
 
       let getAllWaitPointsBetweenPoints = function (point1, point2, point_list) {
         let startIndex = undefined;
@@ -99,7 +100,7 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 
 export const redrawMarkersEdit = function(map: any, previousMarkers: PreviousMarker[], markerHandler: MarkerHandler, opts: MapOptions) {
 
-    var self = this;
+    var self = this as EditRoute ;
 
     if(! markerHandler) {
         self.markerHandler = {
@@ -132,7 +133,7 @@ export const redrawMarkersEdit = function(map: any, previousMarkers: PreviousMar
         return;
     }
 
-    opts.markers.forEach(function(marker: MarkerOptions) {
+    opts.markers.forEach(function(marker: MarkerOptions, index ) {
         console.log('marker category');
         console.log(marker.category);
         let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
@@ -158,6 +159,9 @@ export const redrawMarkersEdit = function(map: any, previousMarkers: PreviousMar
 
         let onMenuItemSetStartListener = function () {
             // markerHandler.startMarker = this;
+
+            self._setStart(index);
+
             this.setIcon(start_marker_icon);
             self.markerHandler.startMarker = this;
 

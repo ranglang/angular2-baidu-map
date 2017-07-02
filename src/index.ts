@@ -1,9 +1,13 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
-
+import {StoreModule} from '@ngrx/store';
 import { BaiduMap } from './components/map';
 import {EditRoute} from "./components/editRoute";
+import {rootReducer} from "./app/ngrx";
 
 @NgModule({
+    imports: [
+        StoreModule.provideStore(rootReducer),
+        ],
     declarations: [
         BaiduMap,
         EditRoute,
