@@ -16,9 +16,19 @@ export interface MarkerSate {
     listeners: Function[];
 }
 
-export interface PreviousStateMarker {
-    markers: MarkerSate[]
+export interface PolyLineSate {
+    polyLine: any;
+    listeners: Function[];
 }
+
+export interface PreviousStateMarker {
+    markers: MarkerSate[],
+    polyLine ?: PolyLineSate[]
+}
+
+// export interface PreviousStateMarker {
+//     markers: MarkerSate[]
+// }
 
 export interface PreviousMarker {
     marker: any;

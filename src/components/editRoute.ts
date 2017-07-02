@@ -20,7 +20,7 @@ import {
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
-import {redrawPolyLinEdit, redrawEditState} from "../RouteEditCoreOperations";
+import {redrawEditPolyline, redrawPolyLinEdit, redrawEditState} from "../RouteEditCoreOperations";
 import {AppRxState} from "../app/ngrx";
 import {Observable, Subscription} from "rxjs";
 import {EditRouteActions} from "./editRoute.actions";
@@ -49,6 +49,10 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
         case EditRouteActions.SET_START: {
             return {...state, startIndex: action.payload};
+        }
+
+        case EditRouteActions.SET_END: {
+            return {...state, endIndex: action.payload};
         }
         default: {
             return state;
@@ -121,6 +125,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
         this._subRes = this.map$.subscribe((res) => {
             this._redrawState(res);
+            // let s = {...initialState, markers: this.options ? this.options.markers: []}
+            // redrawEditState.bind(this)(this.map, this.previousMarkers, s)
         })
     }
 
@@ -135,6 +141,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     _redrawState(state: EditRouteRxState ) {
         let s = {...state, markers: this.options ? this.options.markers: []}
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
+        redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
     }
 
     ngOnChanges(changes: { [propertyName: string]: SimpleChange }) {
@@ -149,7 +156,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         reCenter(this.map, opts);
         reZoom(this.map, opts);
         let s = {...initialState, markers: opts.markers}
-        this._redrawState.bind(this)(this.map, this.previousMarkers, s)
+        redrawEditState.bind(this)(this.map, this.previousMarkers, s)
+        redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
 
         // redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, opts);
         // redrawPolyline.bind(this)(this.map, this.polyline, opts)
@@ -167,7 +175,11 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.onMapLoaded.emit(this.map);
 
         let s = {...initialState, markers: this.options.markers}
-        this._redrawState.bind(this)(this.map, this.previousMarkers, s)
+        redrawEditState.bind(this)(this.map, this.previousMarkers, s)
+        redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
+
+
+        // redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s);
 
         // redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, options);
         // redrawPolyline.bind(this)(this.map, this.polyline, options)
@@ -186,16 +198,13 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         // redrawPolyLinEdit.bind(this)(this.map, this.previousPolyLine, this.markerHandler, options )
     }
 
-    _setStart(point: any) {
-        console.log('_setStart');
-        console.log(point);
+    _setEnd(point: any) {
         let i = this.options.markers.findIndex(res => res.longitude === point.lng && res.latitude === point.lat);
+        this.store.dispatch(this.action.setEnd(i));
+    }
 
-        console.log('start index: ' + i);
-
-        // this.options.markers.filter(res => );
-
-        // console.log('dispatch set start: ' + i);
+    _setStart(point: any) {
+        let i = this.options.markers.findIndex(res => res.longitude === point.lng && res.latitude === point.lat);
         this.store.dispatch(this.action.setStart(i));
     }
 

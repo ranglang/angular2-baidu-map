@@ -19,4 +19,12 @@ export class EditRouteActions {
             payload: i,
         };
     }
+
+    static SET_END = '[ROUTE EDIT ] Set End';
+    public setEnd(i: number): Action {
+        return {
+            type: EditRouteActions.SET_END,
+            payload: i,
+        };
+    }
 }

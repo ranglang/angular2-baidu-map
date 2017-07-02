@@ -98,7 +98,65 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 
 }
 
- // markerHandler: MarkerHandler
+export const redrawEditPolyline = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
+    var BMap: any = (<any>window)['BMap'];
+    let route = this;
+    console.log('redrawEditPolyline ........');
+
+    // if(previousMarkers) {
+    //     if(!previousMarkers.markers) {
+    //         return;
+    //     }
+    //
+    // }else {
+    //     return;
+    // }
+
+    if(previousMarkers) {
+        console.log('has previousMarkers');
+        console.log(previousMarkers);
+
+        if(previousMarkers.polyLine) {
+            console.log('previousMarkers.polyLine is defiend');
+            console.log('length: ' + previousMarkers.polyLine.length);
+
+            previousMarkers.polyLine.forEach(line => {
+                map.removeOverlay(line.polyLine)
+            })
+        } else {
+            console.log('previousMarkers.polyLine is undefiend');
+            route.previousMarkers = {...previousMarkers, polyLine : []};
+        }
+    } else {
+        return;
+    }
+
+    if((state.startIndex !== -1) || (state.endIndex === -1)){
+        let a_start = (state.startIndex > state.endIndex) ? state.endIndex: state.startIndex;
+        let b = (state.startIndex > state.endIndex) ? state.startIndex: state.endIndex;
+        console.log('a start' +  a_start + 'end : ' + b);
+        let pos = previousMarkers.markers.slice(a_start, b + 1).map(res => {
+            return res.marker.getPosition();
+        });
+
+        console.log(pos);
+
+        let polylines = new BMap.Polyline(
+            pos,
+            {
+                strokeColor: 'red',
+                strokeWeight: 3,
+                strokeOpacity: 0.5
+            }
+        );
+        let a = [{polyLine: polylines, listener: []}];
+
+        route.previousMarkers = {...previousMarkers, polyLine: a}
+        map.addOverlay(polylines);
+
+    }
+}
+
 export const redrawEditState = function(map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState ) {
     let route = this;
     console.log('redrawEditState .......');
@@ -108,7 +166,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
         return;
     }
 
-
     if (previousMarkers) {
         previousMarkers.markers.forEach(markerState => {
             map.removeOverlay(markerState.marker)
@@ -116,9 +173,10 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 
         previousMarkers.markers.length = 0;
     } else {
-        route.previousMarkers = {
-            markers: []
-        }
+        route.previousMarkers = {...previousMarkers, markers : []};
+        // route.previousMarkers = {
+        //     markers: []
+        // }
     }
 
     let start_marker_icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
@@ -134,29 +192,12 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
     let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
 
         let onMenuItemSetStartListener = function () {
-            console.log('onMenuItemSetStartListener ');
             route._setStart(this.getPosition());
-
-
-            // markerHandler.startMarker = this;
-
-            // self._setStart(index);
-            //
-            // this.setIcon(start_marker_icon);
-            // self.markerHandler.startMarker = this;
-            //
-            // let menuItem = cxm.getItem(0);
-            // cxm.removeItem(menuItem);
-            // let menuItem1 = cxm.getItem(1);
-            // cxm.removeItem(menuItem);
-            // cxm.removeItem(menuItem1);
-            // cxm.addItem(item_unstart);
-            // cxm.addItem(item_destination);
-            // self._drawPolyLine()
         }
 
-        //  item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
-        // item_undestination = new BMap.MenuItem('取消终点', onMenuItemUnSetDestinationListener.bind(marker2));
+        let onMenuItemSetDestinationListener = function () {
+            route._setEnd(this.getPosition());
+        }
 
     route.previousMarkers.markers.length = 0;
     // route.previousMarkers.markers = [];
@@ -173,10 +214,11 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
                 marker2.setIcon(trace_point_icon)
                 let cxm = new BMap.ContextMenu();
                 let item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
+                let item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
                 cxm.addItem(item_start);
+                cxm.addItem(item_destination);
                 marker2.addContextMenu(cxm);
             }
-
             a.push({
                 marker: marker2,
                 listeners: []
