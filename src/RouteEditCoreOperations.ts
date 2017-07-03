@@ -99,6 +99,20 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 
 export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
+    let route = this;
+    console.log('previousMarkers');
+    console.log(previousMarkers);
+
+    if(previousMarkers) {
+        console.log('previousMarkers.polyLine')
+        if(! previousMarkers.polyLine) {
+            console.log(previousMarkers.polyLine)
+            previousMarkers.polyLine.forEach((res) => {
+                console.log('for each');
+                map.addOverlay(map.removeOverlay(res.polyLine));
+            });
+        }
+    }
 
     if(state.enableSearch) {
         console.log('enableSearch');
@@ -106,18 +120,21 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
             renderOptions: {map, autoViewport: true, enableDragging: true},
             onPolylinesSet: (routes) => {
                 console.log(' search result');
-
                 let searchRoute = routes[0].getPolyline();
                 console.log(searchRoute);
                 console.log(map);
-                map.addOverlay(searchRoute);
-
+                map.addOverlay(searchRoute.getPath());
+                route.previousMarkers =  {
+                    ...previousMarkers,
+                    polyLine: [{polyLine: searchRoute, listeners: []}]
+                }
                 // let array = [];
                 // let a = searchRoute.getPath();
                 // for (let i = 0; i < a.length; i++) {
                 //   array = array.concat(a[i]);
                 // }
                 // _DATA.trace_point = array;
+
             },
             onSearchComplete: function (results) {
                 console.log('onSearchComplete')
@@ -128,7 +145,12 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
                 // _Bmap.removeOverlay(routes[1].marker);
             }
         });
-        driving.search(previousMarkers.markers[state.startIndex].marker.getPosition(), previousMarkers.markers[state.startIndex].marker.getPosition(), {});
+
+        console.log('start ......');
+
+        console.log(previousMarkers.markers[state.startIndex].marker.getPosition())
+        console.log(' destination ........');
+        driving.search(previousMarkers.markers[state.startIndex].marker.getPosition(), previousMarkers.markers[state.endIndex].marker.getPosition(), {});
     }else {
         console.log('Search diabled');
     }
