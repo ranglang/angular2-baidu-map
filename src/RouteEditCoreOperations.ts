@@ -7,7 +7,7 @@ import {setGeoCtrl} from './controls/GeoControl';
 import {setScaleCtrl} from './controls/ScaleControl';
 import {setOverviewMapCtrl} from './controls/OverviewMapControl';
 import {setNavigationCtrl} from './controls/NavigationControl';
-import {MarkerIcon} from "./enum/ControlAnchor";
+import {MarkerIcon, RouteEditMode} from "./enum/ControlAnchor";
 import {BaiduMap} from "./components/map";
 import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 import {createMarker} from "./CoreOperations";
@@ -100,8 +100,6 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
     let route = this;
-    console.log('previousMarkers');
-    console.log(previousMarkers);
 
     if(previousMarkers) {
         console.log('previousMarkers.polyLine')
@@ -254,27 +252,45 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
     let a = [];
 
     if(state.markers) {
-        state.markers.forEach(function(marker: MarkerOptions, index ) {
-            let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-            if(index === state.startIndex) {
-                marker2.setIcon(start_marker_icon);
-            } else if(index === state.endIndex){
-                marker2.setIcon(destination_marker_icon);
-            } else {
-                marker2.setIcon(trace_point_icon)
-                let cxm = new BMap.ContextMenu();
-                let item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
-                let item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
-                cxm.addItem(item_start);
-                cxm.addItem(item_destination);
-                marker2.addContextMenu(cxm);
+        switch (state.editMode) {
+            case RouteEditMode.DRIVIVE_ROUTE: {
+                state.markers.forEach(function(marker: MarkerOptions, index ) {
+                    let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+                    a.push({
+                        marker: marker2,
+                        listeners: []
+                    });
+                    map.addOverlay(marker2);
+                })
+                break;
             }
-            a.push({
-                marker: marker2,
-                listeners: []
-            });
-            map.addOverlay(marker2);
-        });
+            default: {
+                state.markers.forEach(function(marker: MarkerOptions, index ) {
+                    let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+                    if(index === state.startIndex) {
+                        marker2.setIcon(start_marker_icon);
+                    } else if(index === state.endIndex){
+                        marker2.setIcon(destination_marker_icon);
+                    } else {
+                        marker2.setIcon(trace_point_icon)
+                        let cxm = new BMap.ContextMenu();
+                        let item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
+                        let item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
+                        cxm.addItem(item_start);
+                        cxm.addItem(item_destination);
+                        marker2.addContextMenu(cxm);
+                    }
+                    a.push({
+                        marker: marker2,
+                        listeners: []
+                    });
+                    map.addOverlay(marker2);
+                });
+            }
+
+
+        }
+
 
     if(state.markers.length > 0){
         map.setViewport(state.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));

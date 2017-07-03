@@ -26,6 +26,7 @@ import {Observable, Subscription} from "rxjs";
 import {EditRouteActions} from "./editRoute.actions";
 import {sampleTime} from "rxjs/operator/sampleTime";
 import {BaiduMap} from "./map";
+import {RouteEditMode} from "../enum/ControlAnchor";
 
 
 export interface EditRouteRxState {
@@ -33,13 +34,15 @@ export interface EditRouteRxState {
     endIndex: number;
     markers: MarkerOptions[];
     enableSearch: boolean;
+    editMode: number;
 }
 
 export const initialState: EditRouteRxState  = {
     startIndex: -1,
     endIndex: -1,
     markers: [],
-    enableSearch: false
+    enableSearch: false,
+    editMode: RouteEditMode.SELECT_MODE,
 }
 
 
@@ -58,8 +61,7 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         }
 
         case EditRouteActions.SET_DRIVE: {
-             // endIndex: action.payload
-            return {...state, enableSearch: true};
+            return {...state, enableSearch: true, editMode: RouteEditMode.DRIVIVE_ROUTE};
         }
         default: {
             return state;
@@ -138,7 +140,7 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
   width: 59px;
   border-top-style: solid;
   border-top-width: 3px;
-  padding-top: 4pxj;
+  padding-top: 4px;
   border-top-color: rgb(204, 204, 204);
 }
 

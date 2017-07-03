@@ -10,3 +10,9 @@ export enum MarkerIcon {
     ROUTE = 1,
     OVERSPEED = 2,
 }
+
+export enum RouteEditMode {
+    SELECT_MODE = -1,
+    DRIVIVE_ROUTE = 1,
+
+}
