@@ -24,6 +24,7 @@ export interface PolyLineSate {
 export interface PreviousStateMarker {
     markers: MarkerSate[],
     polyLine ?: PolyLineSate[]
+    drivingRoute: any;
 }
 
 // export interface PreviousStateMarker {

@@ -34,4 +34,18 @@ export class EditRouteActions {
             type: EditRouteActions.SET_DRIVE,
         };
     }
+
+    static APPLY_CHANGE = '[ROUTE EDIT ] Apply Change';
+    public applyChange(): Action {
+        return {
+            type: EditRouteActions.APPLY_CHANGE,
+        };
+    }
+
+    static CANCEL_CHANGE = '[ROUTE EDIT ] Cancel Change';
+    public cancelChange(): Action {
+        return {
+            type: EditRouteActions.CANCEL_CHANGE,
+        };
+    }
 }

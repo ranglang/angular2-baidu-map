@@ -100,9 +100,10 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
     let route = this;
+    console.log('change previousMarker')
+    console.log(previousMarkers)
 
     if(previousMarkers) {
-        console.log('previousMarkers.polyLine')
         if(! previousMarkers.polyLine) {
             console.log(previousMarkers.polyLine)
             previousMarkers.polyLine.forEach((res) => {
@@ -110,22 +111,33 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
                 map.addOverlay(map.removeOverlay(res.polyLine));
             });
         }
+        if(previousMarkers.drivingRoute) {
+            console.log('previousMarkers.drivingRoute')
+            console.log(previousMarkers.drivingRoute);
+           previousMarkers.drivingRoute.clearResults();
+        }else {
+            console.log('no driving Route');
+        }
+    }
+
+    function onSearchComplete (results) {
+        console.log('onSearchComplete')
+        route.previousMarkers = {...previousMarkers, drivingRoute: this }
     }
 
     if(state.enableSearch) {
-        console.log('enableSearch');
         let driving = new BMap.DrivingRoute(map, {
-            renderOptions: {map, autoViewport: true, enableDragging: true},
+            renderOptions: {map, autoViewport: true, enableDragging:false},
             onPolylinesSet: (routes) => {
                 console.log(' search result');
                 let searchRoute = routes[0].getPolyline();
-                console.log(searchRoute);
-                console.log(map);
                 map.addOverlay(searchRoute.getPath());
-                route.previousMarkers =  {
-                    ...previousMarkers,
-                    polyLine: [{polyLine: searchRoute, listeners: []}]
-                }
+                console.log(route.getPreviousMarkers())
+                // route.previousMarkers =  {
+                //     ...previousMarkers,
+                //     polyLine: [{polyLine: searchRoute, listeners: []}]
+                // }/
+
                 // let array = [];
                 // let a = searchRoute.getPath();
                 // for (let i = 0; i < a.length; i++) {
@@ -135,30 +147,32 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
 
             },
             onSearchComplete: function (results) {
-                console.log('onSearchComplete')
-                // _DATA.drivingRoute = driving;
+                console.log('change previousMarkers. drivingRoute')
+                // route.previousMarkers = {...previousMarkers, drivingRoute: results }
+                // route._updateDriveRoute(results)
+                // console.log(route.getPreviousMarkers())
+                // console.log(route.previousMarkers);
+
+            //     console.log('onSearchComplete')
+            //     // _DATA.drivingRoute = driving;
             },
             onMarkersSet: function (routes) {
-                // _Bmap.removeOverlay(routes[0].marker);
-                // _Bmap.removeOverlay(routes[1].marker);
+                map.removeOverlay(routes[0].marker);
+                map.removeOverlay(routes[1].marker);
             }
         });
-
-        console.log('start ......');
-
+        route._updateDriveRoute(driving)
         console.log(previousMarkers.markers[state.startIndex].marker.getPosition())
-        console.log(' destination ........');
         driving.search(previousMarkers.markers[state.startIndex].marker.getPosition(), previousMarkers.markers[state.endIndex].marker.getPosition(), {});
-    }else {
-        console.log('Search diabled');
     }
 }
-
-
 
 export const redrawEditPolyline = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
     let route = this;
+
+    console.log('previousMarkers in redrawEditPolyline  ' );
+    console.log(previousMarkers);
 
     if (previousMarkers) {
         console.log('has previousMarkers');
@@ -214,6 +228,8 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
         return;
     }
 
+    console.log('previousMarkers in redrawEditState ' );
+    console.log(previousMarkers);
     if (previousMarkers) {
         previousMarkers.markers.forEach(markerState => {
             map.removeOverlay(markerState.marker)

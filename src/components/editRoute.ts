@@ -63,6 +63,29 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         case EditRouteActions.SET_DRIVE: {
             return {...state, enableSearch: true, editMode: RouteEditMode.DRIVIVE_ROUTE};
         }
+
+        case EditRouteActions.APPLY_CHANGE: {
+            switch (state.editMode) {
+                case RouteEditMode.DRIVIVE_ROUTE: {
+                    console.log('DRIVE ROUTE');
+                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE};
+                }
+                default: {
+                    return state;
+                }
+            }
+        }
+
+        case EditRouteActions.CANCEL_CHANGE: {
+            switch (state.editMode) {
+                case RouteEditMode.DRIVIVE_ROUTE: {
+                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE};
+                }
+                default: {
+                    return state;
+                }
+            }
+        }
         default: {
             return state;
         }
@@ -160,11 +183,17 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         <div class="startText lineInfo"   [class.active]="hasMarkerEnd$ | async">终点</div>
         
         <!--[ngClass]="{'ui-hide': (!(DATA.start_marker && DATA.end_marker)) || DATA.edit_mode }"-->
-        <div class="lineEditArea" [class.ui-hide]="!(hasLine$ |async)">
+        <div class="lineEditArea" [class.ui-hide]="(map$ |async).editMode !== -1">
             <!--uButton-->
             <!--icon="fa-magic" -->
             <!--uTooltip="自动推荐轨迹点" tooltipPosition="bottom"-->
             <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="_drawSearch()" >自</button>
+        </div>
+
+        <div>{{(map$ |async).editMode}}</div>
+        <div class="applyOrCancel" [class.ui-hide]="(map$ |async).editMode === -1" >
+            <button id="applyChange"  type="button"   class="ui-button-info applyIcon" (click)="_applyChange()" >应用</button>
+            <button  id="applyCancel"  type="button"   class="ui-button-warning applyIcon" (click)="_applyCancel()">取消</button>
         </div>
     </div>
     <div id="container" #map>
@@ -249,6 +278,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.hasLine$ = this.store.select(res => (res.routeEdit.endIndex !== -1  && res.routeEdit.startIndex !== -1))
 
         this._subRes = this.map$.subscribe((res) => {
+            console.log('this.previousMarkers _subRes ');
+            console.log(this.getPreviousMarkers());
             this._redrawState(res);
         })
     }
@@ -260,8 +291,10 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         loader(this.ak, offlineOpts, this._draw.bind(this), this.protocol, 'edit-route');
     }
 
+    _redrawState(state: EditRouteRxState) {
+        console.log('_redrawState previousMarkers');
+        console.log(this.previousMarkers);
 
-    _redrawState(state: EditRouteRxState ) {
         let s = {...state, markers: this.options ? this.options.markers: []}
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
@@ -328,6 +361,13 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         // redrawPolyLinEdit.bind(this)(this.map, this.previousPolyLine, this.markerHandler, options )
     }
 
+    _applyCancel() {
+        this.store.dispatch(this.action.cancelChange());
+    }
+    _applyChange() {
+        this.store.dispatch(this.action.applyChange());
+    }
+
     _setEnd(point: any) {
         let i = this.options.markers.findIndex(res => res.longitude === point.lng && res.latitude === point.lat);
         this.store.dispatch(this.action.setEnd(i));
@@ -343,6 +383,14 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         if(this._subRes ) {
             this._subRes.unsubscribe();
         }
+    }
+    _updateDriveRoute(a: any) {
+        this.previousMarkers = {...this.previousMarkers, drivingRoute: a}
+    }
+
+    getPreviousMarkers () {
+     return   this.previousMarkers ;
+        // = {...this.previousMarkers, drivingRoute: a}
     }
 
 }
