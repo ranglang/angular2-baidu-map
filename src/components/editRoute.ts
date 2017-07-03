@@ -50,11 +50,18 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
     switch (action.type) {
         case EditRouteActions.SET_OPTIONS: {
             let mapOpts = action.payload as MapOptions;
-            let s = {...state, markers: mapOpts.markers}
-            return s
+            return {...state, markers: mapOpts.markers, startIndex: -1, endIndex: -1}
         }
         case EditRouteActions.SHOW_MARKER: {
             return state;
+        }
+
+        case EditRouteActions.SET_STRAIGHT: {
+
+            console.log('state.startIndex: ' + state.startIndex);
+            console.log('state.endIndex: ' + state.endIndex);
+            // startIndex: action.payload
+            return {...state, editMode: RouteEditMode.SET_STRAIGHT};
         }
 
         case EditRouteActions.SET_START: {
@@ -66,21 +73,23 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         }
 
         case EditRouteActions.SET_DRIVE: {
-            return {...state, enableSearch: true, editMode: RouteEditMode.DRIVIVE_ROUTE};
+            return {...state, enableSearch: true, editMode: RouteEditMode.DRIVIVE_ROUTE };
         }
 
         case EditRouteActions.APPLY_CHANGE: {
             switch (state.editMode) {
+                case RouteEditMode.SET_STRAIGHT: {
+                    let a = state.markers.slice(0, state.startIndex + 1);
+                    let b = state.markers.slice(state.endIndex);
+                    return {...state, enableSearch: false,
+                        editMode: RouteEditMode.SELECT_MODE, markers: a.concat(b), endIndex : state.startIndex + 1 };
+                }
                 case RouteEditMode.DRIVIVE_ROUTE: {
-                    console.log('DRIVE ROUTE');
-
-                    // markers: MarkerOptions[];
-                    let a= state.markers.slice(0, state.startIndex + 1);
-                    let b = state.markers.slice( state.startIndex + 1)
+                    let a= state.markers.slice(0, state.startIndex );
+                    let b = state.markers.slice( state.endIndex + 1)
                     let s = action.payload as MarkerSate[]
 
                     let c = s.map(item => {
-                        console.log(item.marker.getPosition());
                         return {
                             longitude: item.marker.getPosition().lng,
                             latitude: item.marker.getPosition().lat,
@@ -88,7 +97,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                         }
                     });
                     let r = (a.concat(c)).concat(b);
-                    console.log('r.length: ' + r.length);
                     return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, markers: r};
                 }
                 default: {
@@ -197,6 +205,7 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
     template: `
 
     <div id="fixHandleBar" >
+        <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="save()">长传</button>
         <div class="startText lineInfo" [ngClass]="{'active': (hasMarkerStart$ | async) }" >起点</div>
         <div id="leftStartCircle lineInfo"  [class.active]="hasMarkerStart$ |async" class="circle" ></div>
         <div class="edit-line-status"  [class.active]="hasLine$ | async" ></div>
@@ -204,11 +213,9 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         <div class="startText lineInfo"   [class.active]="hasMarkerEnd$ | async">终点</div>
         
         <!--[ngClass]="{'ui-hide': (!(DATA.start_marker && DATA.end_marker)) || DATA.edit_mode }"-->
-        <div class="lineEditArea" [class.ui-hide]="(map$ |async).editMode !== -1">
-            <!--uButton-->
-            <!--icon="fa-magic" -->
-            <!--uTooltip="自动推荐轨迹点" tooltipPosition="bottom"-->
+        <div class="lineEditArea" [class.ui-hide]="((map$ |async).editMode !== -1) &&((map$ |async).startIndex !== -1) && ((map$ |async).endIndex !== -1)">
             <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="_drawSearch()" >自</button>
+            <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="_drawStraight()" >直</button>
         </div>
 
         <div>{{(map$ |async).editMode}}</div>
@@ -261,6 +268,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     @Output() onEditPolygonCompleted = new EventEmitter();
     @Output() onClicked = new EventEmitter();
 
+    @Output() onSave = new EventEmitter();
+
     @ViewChild("map") mapChild: ElementRef;
 
     map: any;
@@ -277,6 +286,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     previousMarkers: PreviousStateMarker;
 
+    private _state : EditRouteRxState;
 
     private map$ : Observable<EditRouteRxState>;
     private hasMarkerStart$ : Observable<boolean>;
@@ -299,8 +309,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.hasLine$ = this.store.select(res => (res.routeEdit.endIndex !== -1  && res.routeEdit.startIndex !== -1))
 
         this._subRes = this.map$.subscribe((res) => {
-            console.log('this.previousMarkers _subRes ');
-            // console.log(this.getPreviousMarkers());
+            this._state = res;
             this._redrawState(res);
         })
     }
@@ -313,12 +322,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
 
     _redrawState(s: EditRouteRxState) {
-        // console.log('_redrawState previousMarkers');
-        // console.log(this.previousMarkers);
-
-        // let s = {...state, markers: this.options ? this.options.markers: []}
-
-
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
@@ -337,10 +340,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         reZoom(this.map, opts);
 
         this.store.dispatch(this.action.getSetMapOption(opts))
-        // let s = {...initialState, markers: opts.markers}
-        // redrawEditState.bind(this)(this.map, this.previousMarkers, s)
-        // redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
-        // redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
     }
 
     _draw() {
@@ -354,39 +353,33 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         //TODO
         let s = {...initialState, markers: this.options.markers}
         this._redrawState(s);
-
-        // this.store.dispatch(this.action.getSetMapOption(opts))
-        // redrawEditState.bind(this)(this.map, this.previousMarkers, s)
-        // redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
-        // redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
     }
 
-    _drawSearch() {
-        this.store.dispatch(this.action.setDrive());
+_drawSearch () {
+        this.store.dispatch(this.action.setDrive())
+}
+    _drawStraight() {
+        this.store.dispatch(this.action.setStraight());
     }
 
     _drawPolyLine() {
-        console.log('_drawPolyLine');
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
-        console.log('this.markerHandler');
-        console.log(this.markerHandler);
     }
 
     _applyCancel() {
         this.store.dispatch(this.action.cancelChange());
     }
     _applyChange() {
-        console.log('_applyChange');
         this.store.dispatch(this.action.applyChange(this.previousMarkers.currentPoints));
     }
 
     _setEnd(point: any) {
-        let i = this.options.markers.findIndex(res => res.longitude === point.lng && res.latitude === point.lat);
+        let i = this.previousMarkers.markers.findIndex(res => res.marker.getPosition() === point);
         this.store.dispatch(this.action.setEnd(i));
     }
 
     _setStart(point: any) {
-        let i = this.options.markers.findIndex(res => res.longitude === point.lng && res.latitude === point.lat);
+        let i = this.previousMarkers.markers.findIndex(res => res.marker.getPosition() === point);
         this.store.dispatch(this.action.setStart(i));
     }
 
@@ -394,6 +387,9 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         if(this._subRes ) {
             this._subRes.unsubscribe();
         }
+    }
+    _updateMarkers(a: any) {
+        this.previousMarkers = {...this.previousMarkers, markers: a}
     }
     _updateDriveRoute(a: any) {
         this.previousMarkers = {...this.previousMarkers, drivingRoute: a}
@@ -409,9 +405,15 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         })}
     }
 
+    /**
+     * save data
+     */
+    save() {
+        this.onSave.emit(this._state.markers);
+    }
+
     getPreviousMarkers () {
      return   this.previousMarkers ;
-        // = {...this.previousMarkers, drivingRoute: a}
     }
 
 }

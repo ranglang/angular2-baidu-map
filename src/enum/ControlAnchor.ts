@@ -14,5 +14,6 @@ export enum MarkerIcon {
 export enum RouteEditMode {
     SELECT_MODE = -1,
     DRIVIVE_ROUTE = 1,
+    SET_STRAIGHT = 2
 
 }

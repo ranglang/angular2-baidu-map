@@ -59,5 +59,12 @@ export class EditRouteActions {
                 payload: mapOpt
             };
     }
+
+    static SET_STRAIGHT = '[ROUTE EDIT ] SET Straight';
+    public setStraight(): Action {
+        return {
+            type: EditRouteActions.SET_STRAIGHT,
+        };
+    }
 }
 

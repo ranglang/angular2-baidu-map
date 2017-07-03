@@ -12,6 +12,7 @@ import {BaiduMap} from "./components/map";
 import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 import {createMarker} from "./CoreOperations";
 import {EditRoute, EditRouteRxState} from "./components/editRoute";
+import {EditRouteActions} from "./components/editRoute.actions";
 
       let getAllWaitPointsBetweenPoints = function (point1, point2, point_list) {
         let startIndex = undefined;
@@ -46,9 +47,6 @@ import {EditRoute, EditRouteRxState} from "./components/editRoute";
 
             return [startIndex, destinationIndex];
         }
-
-//           if (resArray[0] > resArray[1]) {
-//             let temp = resArray[0];
       };
 
 export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousEditPolyLine, markerHandler: MarkerHandler, opts: MapOptions) {
@@ -61,18 +59,14 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
     }
 
     if(markerHandler) {
-        console.log('markerHandler is defined');
         if(markerHandler.startMarker && markerHandler.endMarker) {
             let resArray = getAllWaitPointsBetweenPoints(markerHandler.startMarker.getPosition(),
                 markerHandler.endMarker.getPosition(), opts.markers.map(res => new BMap.Point(res.longitude, res.latitude)));
 
-            console.log(resArray);
 
-            console.log(' a: ' + resArray[0] + '             b:' + (resArray[1] + 1))
             let pos = opts.markers.slice(resArray[0],  (resArray[1]  + 1)).map((a) => {
                         return new BMap.Point(a.longitude, a.latitude);
                     });
-            console.log(pos);
 
             let polylines = new BMap.Polyline(
                 pos,
@@ -92,7 +86,6 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
             console.log('markerHandler.startMarker && markerHandler.endMarker should be all settled');
         }
     }else {
-        console.log('markerHandler is undefined');
     }
 
 }
@@ -100,65 +93,29 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
     let route = this;
-    console.log('change previousMarker')
-    console.log(previousMarkers);
 
     if(previousMarkers) {
         if(! previousMarkers.polyLine) {
-            console.log(previousMarkers.polyLine)
             previousMarkers.polyLine.forEach((res) => {
-                console.log('for each');
                 map.addOverlay(map.removeOverlay(res.polyLine));
             });
         }
         if(previousMarkers.drivingRoute) {
-            console.log('previousMarkers.drivingRoute')
-            console.log(previousMarkers.drivingRoute);
            previousMarkers.drivingRoute.clearResults();
         } else {
             console.log('no driving Route');
         }
     }
 
-    function onSearchComplete (results) {
-        console.log('onSearchComplete')
-        route.previousMarkers = {...previousMarkers, drivingRoute: this }
-    }
-
     if(state.enableSearch) {
         let driving = new BMap.DrivingRoute(map, {
             renderOptions: {map, autoViewport: true, enableDragging:false},
             onPolylinesSet: (routes) => {
-                console.log(' search result');
                 let searchRoute = routes[0].getPolyline();
                 map.addOverlay(searchRoute.getPath());
-
                 route._updateCurrentMarker(searchRoute.getPath());
-
-                // console.log(route.getPreviousMarkers())
-
-                // route.previousMarkers =  {
-                //     ...previousMarkers,
-                //     polyLine: [{polyLine: searchRoute, listeners: []}]
-                // }/
-
-                // let array = [];
-                // let a = searchRoute.getPath();
-                // for (let i = 0; i < a.length; i++) {
-                //   array = array.concat(a[i]);
-                // }
-                // _DATA.trace_point = array;
-
             },
             onSearchComplete: function (results) {
-                console.log('change previousMarkers. drivingRoute')
-                // route.previousMarkers = {...previousMarkers, drivingRoute: results }
-                // route._updateDriveRoute(results)
-                // console.log(route.getPreviousMarkers())
-                // console.log(route.previousMarkers);
-
-            //     console.log('onSearchComplete')
-            //     // _DATA.drivingRoute = driving;
             },
             onMarkersSet: function (routes) {
                 map.removeOverlay(routes[0].marker);
@@ -166,8 +123,14 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
             }
         });
         route._updateDriveRoute(driving)
-        console.log(previousMarkers.markers[state.startIndex].marker.getPosition())
-        driving.search(previousMarkers.markers[state.startIndex].marker.getPosition(), previousMarkers.markers[state.endIndex].marker.getPosition(), {});
+        console.log('previous length in drive route: ' + previousMarkers.markers.length)
+
+        let a = previousMarkers.markers[state.startIndex].marker.getPosition()
+        console.log('startIndex: ' + state.startIndex);
+
+        console.log('endIndex: ' + state.endIndex);
+        let b = previousMarkers.markers[state.endIndex].marker.getPosition()
+        driving.search(a, b, {});
     }
 }
 
@@ -175,22 +138,12 @@ export const redrawEditPolyline = function (map: any, previousMarkers: PreviousS
     var BMap: any = (<any>window)['BMap'];
     let route = this;
 
-    console.log('previousMarkers in redrawEditPolyline  ' );
-    console.log(previousMarkers);
-
     if (previousMarkers) {
-        console.log('has previousMarkers');
-        console.log(previousMarkers);
-
         if(previousMarkers.polyLine) {
-            console.log('previousMarkers.polyLine is defiend');
-            console.log('length: ' + previousMarkers.polyLine.length);
-
             previousMarkers.polyLine.forEach(line => {
                 map.removeOverlay(line.polyLine)
             })
         } else {
-            console.log('previousMarkers.polyLine is undefiend');
             route.previousMarkers = {...previousMarkers, polyLine : []};
         }
     } else {
@@ -200,12 +153,21 @@ export const redrawEditPolyline = function (map: any, previousMarkers: PreviousS
     if((state.startIndex !== -1) || (state.endIndex === -1)){
         let a_start = (state.startIndex > state.endIndex) ? state.endIndex: state.startIndex;
         let b = (state.startIndex > state.endIndex) ? state.startIndex: state.endIndex;
-        console.log('a start' +  a_start + 'end : ' + b);
-        let pos = previousMarkers.markers.slice(a_start, b + 1).map(res => {
-            return res.marker.getPosition();
-        });
 
-        console.log(pos);
+        let pos;
+        switch (state.editMode) {
+            case RouteEditMode.SET_STRAIGHT: {
+                pos = previousMarkers.markers.slice(a_start,  a_start + 2).map(res => {
+                    return res.marker.getPosition();
+                });
+                break;
+            }
+            default : {
+                pos = previousMarkers.markers.slice(a_start, b + 1).map(res => {
+                    return res.marker.getPosition();
+                });
+            }
+        }
 
         let polylines = new BMap.Polyline(
             pos,
@@ -225,15 +187,12 @@ export const redrawEditPolyline = function (map: any, previousMarkers: PreviousS
 
 export const redrawEditState = function(map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState ) {
     let route = this;
-    console.log('redrawEditState .......');
     var BMap: any = (<any>window)['BMap'];
     if(!BMap) {
-        console.log('BMap is undefined');
         return;
     }
 
-    console.log('previousMarkers in redrawEditState ' );
-    console.log(previousMarkers);
+
     if (previousMarkers) {
         previousMarkers.markers.forEach(markerState => {
             map.removeOverlay(markerState.marker)
@@ -268,12 +227,23 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
         }
 
     route.previousMarkers.markers.length = 0;
-    // route.previousMarkers.markers = [];
     let a = [];
 
-    console.log('state.markers.length: ' + state.markers.length);
     if(state.markers) {
         switch (state.editMode) {
+            case RouteEditMode.SET_STRAIGHT: {
+                state.markers.forEach(function(marker: MarkerOptions, index ) {
+                    if(index <= state.startIndex || index >= state.endIndex) {
+                        let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+                        a.push({
+                            marker: marker2,
+                            listeners: []
+                        });
+                        map.addOverlay(marker2);
+                    }
+                });
+                break;
+            }
             case RouteEditMode.DRIVIVE_ROUTE: {
                 state.markers.forEach(function(marker: MarkerOptions, index ) {
                     let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
@@ -287,7 +257,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
             }
             default: {
                 state.markers.forEach(function(marker: MarkerOptions, index ) {
-                    console.log('l ' + marker.longitude + 'a ' + marker.latitude);
                     let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
                     if(index === state.startIndex) {
                         marker2.setIcon(start_marker_icon);
@@ -309,15 +278,8 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
                     map.addOverlay(marker2);
                 });
             }
-
-
         }
-
-
-    if(state.markers.length > 0){
-        map.setViewport(state.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
-    }
-        route.previousMarkers.markers =a;
+        route._updateMarkers(a);
     }
 }
 
@@ -358,7 +320,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 //
 //     opts.markers.forEach(function(marker: MarkerOptions, index ) {
 //         console.log('marker category');
-//         console.log(marker.category);
 //         let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
 //         let item_start;
 //         let item_destination;
@@ -369,9 +330,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 //
 //         let onMenuItemUnSetStartListener = function () {
 //             let self = this;
-//             console.log('unSetStart');
-//             console.log('markerHandler.startMarker');
-//             console.log(markerHandler.startMarker);
 //             let menuItem = cxm.getItem(1);
 //             cxm.removeItem(menuItem);
 //             cxm.addItem(item_start);
@@ -399,7 +357,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 //         }
 //
 //         let onMenuItemSetDestinationListener = function () {
-//             console.log('setDestination');
 //
 //             self.markerHandler.endMarker = this;
 //
@@ -418,7 +375,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 //
 //         let onMenuItemUnSetDestinationListener = function () {
 //             let self = this
-//             console.log('setDestination');
 //             self.setIcon(trace_point_icon);
 //
 //             let menuItem = cxm.getItem(0);
@@ -430,7 +386,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 //             cxm.addItem(item_start);
 //             cxm.addItem(item_destination);
 //
-//             console.log(self.point);
 //         }
 //
 //          item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));

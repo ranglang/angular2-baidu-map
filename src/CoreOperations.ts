@@ -128,8 +128,6 @@ export  const reCheckEditPolygon = function (
             strokeStyle: 'solid'
         };
 
-        console.log(map);
-        console.log('BMAP_ANCHOR_TOP_RIGHT: ' + BMAP_ANCHOR_TOP_RIGHT);
         let drawingManager = new BMapLib.DrawingManager(map, {
             isOpen: false,
             drawingToolOptions: {
@@ -143,7 +141,6 @@ export  const reCheckEditPolygon = function (
         });
         let dListner = drawingManager.addEventListener('overlaycomplete', polygoncomplete);
         self.previousPolygon = {polygon: undefined, listeners: [dListner]}
-        console.log(drawingManager);
             drawingManager.open();
             drawingManager.setDrawingMode(BMAP_DRAWING_POLYGON);
     }
@@ -323,7 +320,6 @@ export const redrawPolyline = function (map: any, polyline: any, opts: MapOption
 }
 
 export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[], opts: MapOptions) {
-    console.log('redrawMarkers....');
     var BMap: any = (<any>window)['BMap'];
     var self = this;
 
