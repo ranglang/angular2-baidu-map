@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
+import {MarkerSate} from "../interfaces/PreviousMarker";
+import {MapOptions} from "../interfaces/Options";
 
 @Injectable()
 
@@ -36,9 +38,10 @@ export class EditRouteActions {
     }
 
     static APPLY_CHANGE = '[ROUTE EDIT ] Apply Change';
-    public applyChange(): Action {
+    public applyChange(a: MarkerSate[] ): Action {
         return {
             type: EditRouteActions.APPLY_CHANGE,
+            payload: a
         };
     }
 
@@ -48,4 +51,13 @@ export class EditRouteActions {
             type: EditRouteActions.CANCEL_CHANGE,
         };
     }
+
+    static SET_OPTIONS = '[ROUTE EDIT ] INITIAL Change';
+    public getSetMapOption(mapOpt: MapOptions): Action {
+            return {
+                type: EditRouteActions.SET_OPTIONS,
+                payload: mapOpt
+            };
+    }
 }
+

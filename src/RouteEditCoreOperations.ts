@@ -101,7 +101,7 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
     var BMap: any = (<any>window)['BMap'];
     let route = this;
     console.log('change previousMarker')
-    console.log(previousMarkers)
+    console.log(previousMarkers);
 
     if(previousMarkers) {
         if(! previousMarkers.polyLine) {
@@ -115,7 +115,7 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
             console.log('previousMarkers.drivingRoute')
             console.log(previousMarkers.drivingRoute);
            previousMarkers.drivingRoute.clearResults();
-        }else {
+        } else {
             console.log('no driving Route');
         }
     }
@@ -132,7 +132,11 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
                 console.log(' search result');
                 let searchRoute = routes[0].getPolyline();
                 map.addOverlay(searchRoute.getPath());
-                console.log(route.getPreviousMarkers())
+
+                route._updateCurrentMarker(searchRoute.getPath());
+
+                // console.log(route.getPreviousMarkers())
+
                 // route.previousMarkers =  {
                 //     ...previousMarkers,
                 //     polyLine: [{polyLine: searchRoute, listeners: []}]
@@ -267,6 +271,7 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
     // route.previousMarkers.markers = [];
     let a = [];
 
+    console.log('state.markers.length: ' + state.markers.length);
     if(state.markers) {
         switch (state.editMode) {
             case RouteEditMode.DRIVIVE_ROUTE: {
@@ -282,6 +287,7 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
             }
             default: {
                 state.markers.forEach(function(marker: MarkerOptions, index ) {
+                    console.log('l ' + marker.longitude + 'a ' + marker.latitude);
                     let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
                     if(index === state.startIndex) {
                         marker2.setIcon(start_marker_icon);

@@ -1,4 +1,5 @@
 
+import {RouteOptions} from "./Options";
 export interface MarkerHandler {
     startMarker ?: any;
     endMarker ?: any;
@@ -22,9 +23,10 @@ export interface PolyLineSate {
 }
 
 export interface PreviousStateMarker {
-    markers: MarkerSate[],
-    polyLine ?: PolyLineSate[]
+    markers: MarkerSate[];
+    polyLine ?: PolyLineSate[];
     drivingRoute: any;
+    currentPoints ?: MarkerSate[];
 }
 
 // export interface PreviousStateMarker {

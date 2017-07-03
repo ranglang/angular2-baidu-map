@@ -6,7 +6,7 @@ import {
 import {MapOptions, OfflineOptions, MarkerOptions} from '../interfaces/Options';
 import {
     PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine,
-    PreviousStateMarker
+    PreviousStateMarker, MarkerSate
 } from '../interfaces/PreviousMarker';
 import { MapStatus } from '../enum/MapStatus';
 
@@ -17,7 +17,7 @@ import {Store} from '@ngrx/store';
 import { Action } from '@ngrx/store';
 import {
     reCenter, reZoom, redrawMarkers, createInstance, redrawPolyline, createAutoComplete,
-    reCheckEditPolygon, reCreatePolygon, createMarkerEdit
+    reCheckEditPolygon, reCreatePolygon, createMarkerEdit, createMarker
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
 import {redrawEditPolyline, redrawPolyLinEdit, redrawEditState, redrawDriveRoute} from "../RouteEditCoreOperations";
@@ -26,7 +26,7 @@ import {Observable, Subscription} from "rxjs";
 import {EditRouteActions} from "./editRoute.actions";
 import {sampleTime} from "rxjs/operator/sampleTime";
 import {BaiduMap} from "./map";
-import {RouteEditMode} from "../enum/ControlAnchor";
+import {MarkerIcon, RouteEditMode} from "../enum/ControlAnchor";
 
 
 export interface EditRouteRxState {
@@ -48,6 +48,11 @@ export const initialState: EditRouteRxState  = {
 
 export function editRouteReducer(state = initialState, action: any): EditRouteRxState  {
     switch (action.type) {
+        case EditRouteActions.SET_OPTIONS: {
+            let mapOpts = action.payload as MapOptions;
+            let s = {...state, markers: mapOpts.markers}
+            return s
+        }
         case EditRouteActions.SHOW_MARKER: {
             return state;
         }
@@ -68,7 +73,23 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             switch (state.editMode) {
                 case RouteEditMode.DRIVIVE_ROUTE: {
                     console.log('DRIVE ROUTE');
-                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE};
+
+                    // markers: MarkerOptions[];
+                    let a= state.markers.slice(0, state.startIndex + 1);
+                    let b = state.markers.slice( state.startIndex + 1)
+                    let s = action.payload as MarkerSate[]
+
+                    let c = s.map(item => {
+                        console.log(item.marker.getPosition());
+                        return {
+                            longitude: item.marker.getPosition().lng,
+                            latitude: item.marker.getPosition().lat,
+                            category: MarkerIcon.ROUTE
+                        }
+                    });
+                    let r = (a.concat(c)).concat(b);
+                    console.log('r.length: ' + r.length);
+                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, markers: r};
                 }
                 default: {
                     return state;
@@ -279,7 +300,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
         this._subRes = this.map$.subscribe((res) => {
             console.log('this.previousMarkers _subRes ');
-            console.log(this.getPreviousMarkers());
+            // console.log(this.getPreviousMarkers());
             this._redrawState(res);
         })
     }
@@ -291,11 +312,13 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         loader(this.ak, offlineOpts, this._draw.bind(this), this.protocol, 'edit-route');
     }
 
-    _redrawState(state: EditRouteRxState) {
-        console.log('_redrawState previousMarkers');
-        console.log(this.previousMarkers);
+    _redrawState(s: EditRouteRxState) {
+        // console.log('_redrawState previousMarkers');
+        // console.log(this.previousMarkers);
 
-        let s = {...state, markers: this.options ? this.options.markers: []}
+        // let s = {...state, markers: this.options ? this.options.markers: []}
+
+
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
@@ -312,41 +335,30 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let opts = changes['options'].currentValue;
         reCenter(this.map, opts);
         reZoom(this.map, opts);
-        let s = {...initialState, markers: opts.markers}
-        redrawEditState.bind(this)(this.map, this.previousMarkers, s)
-        redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
-        redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
 
-        // redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, opts);
-        // redrawPolyline.bind(this)(this.map, this.polyline, opts)
-        // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
-        // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
-        // reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
+        this.store.dispatch(this.action.getSetMapOption(opts))
+        // let s = {...initialState, markers: opts.markers}
+        // redrawEditState.bind(this)(this.map, this.previousMarkers, s)
+        // redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
+        // redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
     }
 
     _draw() {
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
         this.map = createInstance(options, this.mapChild.nativeElement);
-        // nativeElement
         this.map.addEventListener('click', e => {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
 
+        //TODO
         let s = {...initialState, markers: this.options.markers}
-        redrawEditState.bind(this)(this.map, this.previousMarkers, s)
-        redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
-        redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
+        this._redrawState(s);
 
-        // export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
-
-        // redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s);
-
-        // redrawMarkersEdit.bind(this)(this.map, this.previousMarkers, this.markerHandler, options);
-        // redrawPolyline.bind(this)(this.map, this.polyline, options)
-        // createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)
-        // reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
-        // reCreatePolygon.bind(this)(this.map, this.previousPolygon, options)
+        // this.store.dispatch(this.action.getSetMapOption(opts))
+        // redrawEditState.bind(this)(this.map, this.previousMarkers, s)
+        // redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
+        // redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
     }
 
     _drawSearch() {
@@ -358,14 +370,14 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
         console.log('this.markerHandler');
         console.log(this.markerHandler);
-        // redrawPolyLinEdit.bind(this)(this.map, this.previousPolyLine, this.markerHandler, options )
     }
 
     _applyCancel() {
         this.store.dispatch(this.action.cancelChange());
     }
     _applyChange() {
-        this.store.dispatch(this.action.applyChange());
+        console.log('_applyChange');
+        this.store.dispatch(this.action.applyChange(this.previousMarkers.currentPoints));
     }
 
     _setEnd(point: any) {
@@ -378,7 +390,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.store.dispatch(this.action.setStart(i));
     }
 
-
     ngOnDestroy(): void {
         if(this._subRes ) {
             this._subRes.unsubscribe();
@@ -386,6 +397,16 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
     _updateDriveRoute(a: any) {
         this.previousMarkers = {...this.previousMarkers, drivingRoute: a}
+    }
+
+    _updateCurrentMarker(opts) {
+        var BMap: any = (<any>window)['BMap'];
+        this.previousMarkers = {...this.previousMarkers, currentPoints: opts.map(res => {
+             return {
+                 marker: new BMap.Marker(res),
+                 listener: []
+             }
+        })}
     }
 
     getPreviousMarkers () {
