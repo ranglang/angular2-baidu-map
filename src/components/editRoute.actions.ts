@@ -7,12 +7,12 @@ import {MapOptions} from "../interfaces/Options";
 
 export class EditRouteActions {
 
-    static SHOW_MARKER = '[Stop] show Marker';
-    public showMarker(): Action {
-        return {
-            type: EditRouteActions.SHOW_MARKER,
-        };
-    }
+    // static SHOW_MARKER = '[Stop] show Marker';
+    // public showMarker(): Action {
+    //     return {
+    //         type: EditRouteActions.SHOW_MARKER,
+    //     };
+    // }
 
     static SET_START = '[ROUTE EDIT ] Set Start';
     public setStart(i: number): Action {
@@ -64,6 +64,13 @@ export class EditRouteActions {
     public setStraight(): Action {
         return {
             type: EditRouteActions.SET_STRAIGHT,
+        };
+    }
+
+    static SET_ENABLE_ADD_MARKER = '[ROUTE EDIT ] SET Add Marker';
+    public setEnableAddMarker(): Action {
+        return {
+            type: EditRouteActions.SET_ENABLE_ADD_MARKER,
         };
     }
 }

@@ -11,7 +11,6 @@ export interface PreviousEditPolyLine {
     listeners: Function[];
 }
 
-
 export interface MarkerSate {
     marker: any;
     listeners: Function[];
@@ -27,6 +26,7 @@ export interface PreviousStateMarker {
     polyLine ?: PolyLineSate[];
     drivingRoute: any;
     currentPoints ?: MarkerSate[];
+    mapListener: Function;
 }
 
 // export interface PreviousStateMarker {

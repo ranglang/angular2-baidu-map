@@ -1,6 +1,6 @@
 import {MapOptions, MarkerOptions} from './interfaces/Options';
 import {
-    PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine, PreviousStateMarker,
+    PreviousAutoComplete, PreviousMarker, MarkerHandler, PreviousEditPolyLine, PreviousStateMarker, MarkerSate,
 } from './interfaces/PreviousMarker';
 
 import {setGeoCtrl} from './controls/GeoControl';
@@ -13,6 +13,7 @@ import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 import {createMarker} from "./CoreOperations";
 import {EditRoute, EditRouteRxState} from "./components/editRoute";
 import {EditRouteActions} from "./components/editRoute.actions";
+import {switchMap} from "rxjs/operator/switchMap";
 
       let getAllWaitPointsBetweenPoints = function (point1, point2, point_list) {
         let startIndex = undefined;
@@ -134,6 +135,41 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
     }
 }
 
+
+function drawCurrentPoint(startOption: MarkerOptions, endOption: MarkerOptions, map: any,previousMarkers: PreviousStateMarker, route) {
+    var BMap: any = (<any>window)['BMap'];
+
+    console.log('route._getPolyLine().length: ' + route._getPolyLine().length);
+
+    route._getPolyLine().forEach((res) => {
+            map.removeOverlay(res.polyLine);
+        });
+
+    console.log('drawCurrentPoint')
+    let a = previousMarkers.currentPoints.map(res => {return res.marker.getPosition()})
+    console.log(a)
+    // startOption.
+    let sP = new BMap.Point(startOption.longitude, startOption.latitude);
+    let eP = new BMap.Point(endOption.longitude, endOption.latitude);
+    let polylines = new BMap.Polyline(
+        ([sP].concat(a)).concat(eP),
+        {
+            strokeColor: 'red',
+            strokeWeight: 3,
+            strokeOpacity: 0.5
+        }
+    );
+
+    console.log(polylines);
+    map.addOverlay(polylines);
+    route._updatePolyLine(polylines)
+
+    // let a = [{polyLine: polylines, listener: []}];
+    //
+    // route.previousMarkers = {...previousMarkers, polyLine: a}
+}
+
+
 export const redrawEditPolyline = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
     let route = this;
@@ -150,39 +186,48 @@ export const redrawEditPolyline = function (map: any, previousMarkers: PreviousS
         return;
     }
 
-    if((state.startIndex !== -1) || (state.endIndex === -1)){
-        let a_start = (state.startIndex > state.endIndex) ? state.endIndex: state.startIndex;
-        let b = (state.startIndex > state.endIndex) ? state.startIndex: state.endIndex;
+    switch(state.editMode) {
+        // case RouteEditMode.SET_AND_MARKER: {
+        //
+        //     break;
+        // }
+        default: {
+            if((state.startIndex !== -1) || (state.endIndex === -1)){
+                let a_start = (state.startIndex > state.endIndex) ? state.endIndex: state.startIndex;
+                let b = (state.startIndex > state.endIndex) ? state.startIndex: state.endIndex;
+                let pos;
+                switch (state.editMode) {
+                    case RouteEditMode.SET_STRAIGHT: {
+                        pos = previousMarkers.markers.slice(a_start,  a_start + 2).map(res => {
+                            return res.marker.getPosition();
+                        });
+                        break;
+                    }
+                    default : {
+                        pos = previousMarkers.markers.slice(a_start, b + 1).map(res => {
+                            return res.marker.getPosition();
+                        });
+                    }
+                }
 
-        let pos;
-        switch (state.editMode) {
-            case RouteEditMode.SET_STRAIGHT: {
-                pos = previousMarkers.markers.slice(a_start,  a_start + 2).map(res => {
-                    return res.marker.getPosition();
-                });
-                break;
-            }
-            default : {
-                pos = previousMarkers.markers.slice(a_start, b + 1).map(res => {
-                    return res.marker.getPosition();
-                });
+                let polylines = new BMap.Polyline(
+                    pos,
+                    {
+                        strokeColor: 'red',
+                        strokeWeight: 3,
+                        strokeOpacity: 0.5
+                    }
+                );
+                let a = [{polyLine: polylines, listener: []}];
+
+                route.previousMarkers = {...previousMarkers, polyLine: a}
+                map.addOverlay(polylines);
+
             }
         }
-
-        let polylines = new BMap.Polyline(
-            pos,
-            {
-                strokeColor: 'red',
-                strokeWeight: 3,
-                strokeOpacity: 0.5
-            }
-        );
-        let a = [{polyLine: polylines, listener: []}];
-
-        route.previousMarkers = {...previousMarkers, polyLine: a}
-        map.addOverlay(polylines);
-
     }
+
+
 }
 
 export const redrawEditState = function(map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState ) {
@@ -192,19 +237,40 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
         return;
     }
 
+    console.log('previousMarkers.............');
 
     if (previousMarkers) {
         previousMarkers.markers.forEach(markerState => {
             map.removeOverlay(markerState.marker)
         });
-
         previousMarkers.markers.length = 0;
+
+        // you can clear currentPoints
+        if (previousMarkers.currentPoints) {
+            console.log('has currentPoints');
+
+            previousMarkers.currentPoints.forEach(m => {
+                map.removeOverlay(m.marker)
+            })
+        }else {
+            console.log('no  currentPoints');
+        }
+
     } else {
         route.previousMarkers = {...previousMarkers, markers : []};
-        // route.previousMarkers = {
-        //     markers: []
-        // }
     }
+
+    if(previousMarkers) {
+        if(previousMarkers.mapListener) {
+            console.log('has mapListener');
+            map.setDefaultCursor('default');
+            map.removeEventListener('click', previousMarkers.mapListener);
+        } else {
+            console.log('don\'t has mapListener');
+        }
+    }
+
+
 
     let start_marker_icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
         offset: new BMap.Size(10, 25),
@@ -280,6 +346,21 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
             }
         }
         route._updateMarkers(a);
+    }
+
+    function markClick(event) {
+        console.log('markerClick');
+        let marker =  new BMap.Marker(event.point, {icon: trace_point_icon});
+        map.addOverlay(marker);
+        route.addToCurrentPoints(marker);
+        drawCurrentPoint(state.markers[state.startIndex], state.markers[state.endIndex], map, route.previousMarkers, route);
+    }
+
+    if(state.enableMarkerClick) {
+        route.previousMarkers.currentPoints = [];
+        map.setDefaultCursor('crosshair');
+        map.addEventListener('click', markClick);
+        route.addMarkerListener(markClick);
     }
 }
 
