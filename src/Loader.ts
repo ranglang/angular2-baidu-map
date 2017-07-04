@@ -26,6 +26,10 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
 
         // let baiduMap: MapObjct = win['baiduMap'];
         var BMapLib: any = (<any>window)['BMapLib'];
+
+        console.log('BMapLib');
+        console.log(BMapLib);
+
         if(!BMapLib) {
             console.log('loading drawing')
             createTagDrawingManager();

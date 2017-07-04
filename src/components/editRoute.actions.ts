@@ -6,14 +6,6 @@ import {MapOptions} from "../interfaces/Options";
 @Injectable()
 
 export class EditRouteActions {
-
-    // static SHOW_MARKER = '[Stop] show Marker';
-    // public showMarker(): Action {
-    //     return {
-    //         type: EditRouteActions.SHOW_MARKER,
-    //     };
-    // }
-
     static SET_START = '[ROUTE EDIT ] Set Start';
     public setStart(i: number): Action {
         return {
@@ -71,6 +63,13 @@ export class EditRouteActions {
     public setEnableAddMarker(): Action {
         return {
             type: EditRouteActions.SET_ENABLE_ADD_MARKER,
+        };
+    }
+
+    static SET_CLEAR = '[ROUTE EDIT ] SET Clear';
+    public setClear(): Action {
+        return {
+            type: EditRouteActions.SET_CLEAR,
         };
     }
 }

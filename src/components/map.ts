@@ -83,6 +83,10 @@ export class BaiduMap implements OnInit, OnChanges {
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
     }
 
+    updatePolygonInfo(any) {
+        this.previousPolygon = any;
+    }
+
     _draw() {
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
         this.map = createInstance(options, this.el.nativeElement);

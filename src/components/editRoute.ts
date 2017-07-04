@@ -49,28 +49,40 @@ export const initialState: EditRouteRxState  = {
 
 export function editRouteReducer(state = initialState, action: any): EditRouteRxState {
     switch (action.type) {
+        case EditRouteActions.SET_CLEAR: {
+            return {...state, markers: [], startIndex: -1, endIndex: -1, polyLine: [], enableSearch: false}
+        }
         case EditRouteActions.SET_OPTIONS: {
             let mapOpts = action.payload as MapOptions;
             return {...state, markers: mapOpts.markers, startIndex: -1, endIndex: -1}
         }
+
         // case EditRouteActions.SHOW_MARKER: {
         //     return {...state, editMode: RouteEditMode.SET_AND_MARKER , enableMarkerClick: true};
         // }
 
         case EditRouteActions.SET_STRAIGHT: {
-
-            console.log('state.startIndex: ' + state.startIndex);
-            console.log('state.endIndex: ' + state.endIndex);
-            // startIndex: action.payload
             return {...state, editMode: RouteEditMode.SET_STRAIGHT};
         }
 
         case EditRouteActions.SET_START: {
-            return {...state, startIndex: action.payload};
+            if(state.endIndex) {
+                let s = action.payload < state.endIndex ? action.payload  : state.endIndex;
+                let e = action.payload > state.endIndex ? action.payload : state.endIndex;
+                return {...state, startIndex: s, endIndex: e};
+            } else {
+                return {...state, startIndex: action.payload};
+            }
         }
 
         case EditRouteActions.SET_END: {
-            return {...state, endIndex: action.payload};
+            if(state.startIndex) {
+                let s = state.startIndex < action.payload ? state.startIndex : action.payload;
+                let e = state.startIndex > action.payload ? state.startIndex : action.payload;
+                return {...state, startIndex: s, endIndex: e};
+            } else {
+                return {...state, endIndex: action.payload};
+            }
         }
 
         case EditRouteActions.SET_DRIVE: {
@@ -82,6 +94,25 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         }
         case EditRouteActions.APPLY_CHANGE: {
             switch (state.editMode) {
+                case RouteEditMode.SET_AND_MARKER: {
+                    let a = state.markers.slice(0, state.startIndex + 1);
+                    let b = state.markers.slice(state.endIndex);
+
+                    let s = action.payload as MarkerSate[]
+                    let c = s.map(item => {
+                        return {
+                            longitude: item.marker.getPosition().lng,
+                            latitude: item.marker.getPosition().lat,
+                            category: MarkerIcon.ROUTE
+                        }
+                    });
+                    let r = (a.concat(c)).concat(b);
+
+                    return {...state,
+                        enableMarkerClick: false,
+                        editMode: RouteEditMode.SELECT_MODE, markers: r , endIndex: state.endIndex + c.length - (state.startIndex - state.endIndex + 1)
+                    }
+                }
                 case RouteEditMode.SET_STRAIGHT: {
                     let a = state.markers.slice(0, state.startIndex + 1);
                     let b = state.markers.slice(state.endIndex);
@@ -299,13 +330,11 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     previousMarkers: PreviousStateMarker;
 
-    private _state : EditRouteRxState;
-
-    private map$ : Observable<EditRouteRxState>;
-    private hasMarkerStart$ : Observable<boolean>;
-    private hasMarkerEnd$ : Observable<boolean>;
-
-    private hasLine$ : Observable<boolean>;
+    public _state : EditRouteRxState;
+    public map$ : Observable<EditRouteRxState>;
+    public hasMarkerStart$ : Observable<boolean>;
+    public hasMarkerEnd$ : Observable<boolean>;
+    public hasLine$ : Observable<boolean>;
 
     private  _subRes: Subscription;
     constructor(private el: ElementRef,
@@ -322,10 +351,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.hasMarkerEnd$ = this.store.select(res => res.routeEdit.endIndex !== -1 )
         this.hasLine$ = this.store.select(res => (res.routeEdit.endIndex !== -1  && res.routeEdit.startIndex !== -1))
 
-        this._subRes = this.map$.subscribe((res) => {
-            this._state = res;
-            this._redrawState(res);
-        })
     }
 
 
@@ -333,9 +358,17 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         let offlineOpts: OfflineOptions = Object.assign({}, defaultOfflineOpts, this.offlineOpts);
         this.offlineWords = offlineOpts.txt;
         loader(this.ak, offlineOpts, this._draw.bind(this), this.protocol, 'edit-route');
+
+        this._subRes = this.map$.subscribe((res) => {
+            this._state = res;
+            this._redrawState(res);
+        })
     }
 
     _redrawState(s: EditRouteRxState) {
+        if(!this.map) {
+            return;
+        }
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s)
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s)
@@ -397,19 +430,12 @@ _drawSearch () {
         this.store.dispatch(this.action.setStart(i));
     }
 
-    ngOnDestroy(): void {
-        if(this._subRes ) {
-            this._subRes.unsubscribe();
-        }
-    }
     _updateMarkers(a: any) {
         this.previousMarkers = {...this.previousMarkers, markers: a}
     }
 
     addMarkerListener(a: any) {
         // this.previousMarkers = {...this.previousMarkers, markers: a}
-        console.log('/////////////////addMarkerListener');
-        console.log(a);
         this.previousMarkers.mapListener = a;
     }
 
@@ -436,14 +462,9 @@ _drawSearch () {
 
     _draw2Add() {
         this.store.dispatch(this.action.setEnableAddMarker());
-       // this.map.setDefaultCursor('crosshair');
-       // this.map.addEventListener('click', function (point) {
-       //     console.log(point);
-       // })
     }
 
     addToCurrentPoints (marker) {
-        console.log('this.previousMarkers.currentPoints.length: ' + this.previousMarkers.currentPoints.length)
             this.previousMarkers.currentPoints.push({
                 marker:marker,
                 listeners: []
@@ -458,6 +479,16 @@ _drawSearch () {
 
     getPreviousMarkers () {
      return   this.previousMarkers ;
+    }
+
+    ngOnDestroy(): void {
+        this.store.dispatch(this.action.setClear());
+        if(this._subRes) {
+            this._subRes.unsubscribe();
+            this._subRes.unsubscribe();
+        }
+        // if(this.map$) {
+        // }
     }
 }
 

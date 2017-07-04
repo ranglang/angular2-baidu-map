@@ -12,7 +12,11 @@ import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 export const reCenter = function(map: any, opts: MapOptions) {
     var BMap: any = (<any>window)['BMap'];
     if (opts.center) {
-        map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
+        if(opts.viewports){
+            map.setViewport(opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
+        }else {
+            map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
+        }
     }
 };
 
@@ -66,6 +70,7 @@ export  const reCreatePolygon = function (
 ) {
 
     var BMap: any = (<any>window)['BMap'];
+    let self = this;
 
     if(previousPolygon) {
         if(previousPolygon.polygon) {
@@ -85,7 +90,7 @@ export  const reCreatePolygon = function (
         );
 
         map.addOverlay(polyline);
-        previousPolygon = {polygon: polyline, listeners: []}
+        self.updatePolygonInfo({polygon: polyline, listeners: []});
         map.setViewport(array);
     }
 }
@@ -338,11 +343,17 @@ export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[
 
         var marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
 
-        // add marker to the map
+        if (marker.indexNumber) {
+            let icon = new BMap.Icon('/assets/img/60.png', new BMap.Size(23, 25), {
+              offset: new BMap.Size(10, 25),
+              imageOffset: new BMap.Size(0, 0 - marker.indexNumber * 25)
+            });
+            marker2.setIcon(icon);
+        }
+
         map.addOverlay(marker2);
         let previousMarker: PreviousMarker = { marker: marker2, listeners: [] };
         previousMarkers.push(previousMarker);
-
 
         let onMarkerClickedListener = () => {
             self.onMarkerClicked.emit(marker2);
@@ -375,9 +386,10 @@ export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[
     });
 
 
-    if(opts.markers.length > 0){
-        map.setViewport(opts.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
-    }
+    // if(opts.markers.length > 0){
+    //     map.setViewport(opts.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
+    // }
+
 };
 
 

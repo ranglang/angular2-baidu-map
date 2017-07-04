@@ -92,6 +92,7 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
 }
 
 export const redrawDriveRoute = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
+
     var BMap: any = (<any>window)['BMap'];
     let route = this;
 
@@ -103,8 +104,6 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
         }
         if(previousMarkers.drivingRoute) {
            previousMarkers.drivingRoute.clearResults();
-        } else {
-            console.log('no driving Route');
         }
     }
 
@@ -124,12 +123,9 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
             }
         });
         route._updateDriveRoute(driving)
-        console.log('previous length in drive route: ' + previousMarkers.markers.length)
 
         let a = previousMarkers.markers[state.startIndex].marker.getPosition()
-        console.log('startIndex: ' + state.startIndex);
 
-        console.log('endIndex: ' + state.endIndex);
         let b = previousMarkers.markers[state.endIndex].marker.getPosition()
         driving.search(a, b, {});
     }
@@ -138,17 +134,11 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
 
 function drawCurrentPoint(startOption: MarkerOptions, endOption: MarkerOptions, map: any,previousMarkers: PreviousStateMarker, route) {
     var BMap: any = (<any>window)['BMap'];
-
-    console.log('route._getPolyLine().length: ' + route._getPolyLine().length);
-
     route._getPolyLine().forEach((res) => {
             map.removeOverlay(res.polyLine);
         });
 
-    console.log('drawCurrentPoint')
     let a = previousMarkers.currentPoints.map(res => {return res.marker.getPosition()})
-    console.log(a)
-    // startOption.
     let sP = new BMap.Point(startOption.longitude, startOption.latitude);
     let eP = new BMap.Point(endOption.longitude, endOption.latitude);
     let polylines = new BMap.Polyline(
@@ -160,20 +150,14 @@ function drawCurrentPoint(startOption: MarkerOptions, endOption: MarkerOptions, 
         }
     );
 
-    console.log(polylines);
     map.addOverlay(polylines);
     route._updatePolyLine(polylines)
-
-    // let a = [{polyLine: polylines, listener: []}];
-    //
-    // route.previousMarkers = {...previousMarkers, polyLine: a}
 }
 
 
 export const redrawEditPolyline = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     var BMap: any = (<any>window)['BMap'];
     let route = this;
-
     if (previousMarkers) {
         if(previousMarkers.polyLine) {
             previousMarkers.polyLine.forEach(line => {
@@ -187,10 +171,27 @@ export const redrawEditPolyline = function (map: any, previousMarkers: PreviousS
     }
 
     switch(state.editMode) {
-        // case RouteEditMode.SET_AND_MARKER: {
-        //
-        //     break;
-        // }
+        case RouteEditMode.SET_AND_MARKER: {
+
+            let pos = previousMarkers.markers.slice(state.startIndex,  state.startIndex + 2).map(res => {
+                    return res.marker.getPosition();
+                });
+
+            let polylines = new BMap.Polyline(
+                pos,
+                {
+                    strokeColor: 'red',
+                    strokeWeight: 3,
+                    strokeOpacity: 0.5
+                }
+            );
+            let a = [{polyLine: polylines, listener: []}];
+
+            route.previousMarkers = {...previousMarkers, polyLine: a}
+            map.addOverlay(polylines);
+
+            break;
+        }
         default: {
             if((state.startIndex !== -1) || (state.endIndex === -1)){
                 let a_start = (state.startIndex > state.endIndex) ? state.endIndex: state.startIndex;
@@ -233,11 +234,10 @@ export const redrawEditPolyline = function (map: any, previousMarkers: PreviousS
 export const redrawEditState = function(map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState ) {
     let route = this;
     var BMap: any = (<any>window)['BMap'];
-    if(!BMap) {
+
+    if(!BMap || !map) {
         return;
     }
-
-    console.log('previousMarkers.............');
 
     if (previousMarkers) {
         previousMarkers.markers.forEach(markerState => {
@@ -247,13 +247,9 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 
         // you can clear currentPoints
         if (previousMarkers.currentPoints) {
-            console.log('has currentPoints');
-
             previousMarkers.currentPoints.forEach(m => {
                 map.removeOverlay(m.marker)
             })
-        }else {
-            console.log('no  currentPoints');
         }
 
     } else {
@@ -262,11 +258,9 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 
     if(previousMarkers) {
         if(previousMarkers.mapListener) {
-            console.log('has mapListener');
             map.setDefaultCursor('default');
             map.removeEventListener('click', previousMarkers.mapListener);
         } else {
-            console.log('don\'t has mapListener');
         }
     }
 
@@ -297,6 +291,26 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 
     if(state.markers) {
         switch (state.editMode) {
+            case RouteEditMode.SET_AND_MARKER: {
+                state.markers.forEach(function(marker: MarkerOptions, index ) {
+                    if(index <= state.startIndex || index >= state.endIndex) {
+                        let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+                        if(index === state.startIndex) {
+                            marker2.setIcon(start_marker_icon);
+                        } else if(index === state.endIndex){
+                            marker2.setIcon(destination_marker_icon);
+                        } else {
+                            marker2.setIcon(trace_point_icon);
+                        }
+                        a.push({
+                            marker: marker2,
+                            listeners: []
+                        });
+                        map.addOverlay(marker2);
+                    }
+                });
+                break;
+            }
             case RouteEditMode.SET_STRAIGHT: {
                 state.markers.forEach(function(marker: MarkerOptions, index ) {
                     if(index <= state.startIndex || index >= state.endIndex) {
@@ -349,7 +363,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
     }
 
     function markClick(event) {
-        console.log('markerClick');
         let marker =  new BMap.Marker(event.point, {icon: trace_point_icon});
         map.addOverlay(marker);
         route.addToCurrentPoints(marker);
@@ -365,7 +378,6 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
 }
 
 // export const redrawMarkersEdit = function(map: any, previousMarkers: PreviousMarker[], markerHandler: MarkerHandler, opts: MapOptions) {
-//
 //     var self = this as EditRoute ;
 //
 //     if(! markerHandler) {

@@ -23,6 +23,7 @@ export interface MarkerOptions {
     autoDisplayInfoWindow?: boolean;
     enableDragging?: boolean;
     category ?: number;
+    indexNumber ?: number;
 }
 
 export interface MapDefaultOptions {
@@ -37,7 +38,10 @@ export interface MapDefaultOptions {
 }
 
 export interface MapOptions extends MapDefaultOptions {
-    center: { longitude: number, latitude: number };
+    center: { longitude: number, latitude: number, };
+
+    viewports ?: { longitude: number, latitude: number, }[]
+
     markers?: MarkerOptions[];
     routes?: RouteOptions[];
     polygon?: RouteOptions[];
