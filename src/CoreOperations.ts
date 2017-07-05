@@ -347,13 +347,12 @@ export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[
     }
 
     opts.markers.forEach(function(marker: MarkerOptions) {
-
         var marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-
         if (marker.indexNumber) {
+            console.log('set:  ' + (0 - marker.indexNumber * 25));
             let icon = new BMap.Icon('/assets/img/60.png', new BMap.Size(23, 25), {
               offset: new BMap.Size(10, 25),
-              imageOffset: new BMap.Size(0, 0 - marker.indexNumber * 25)
+              imageOffset: new BMap.Size(0, 0 - (marker.indexNumber  - 1)* 25)
             });
             marker2.setIcon(icon);
         }
