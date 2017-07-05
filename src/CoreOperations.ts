@@ -11,19 +11,26 @@ import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 
 export const reCenter = function(map: any, opts: MapOptions) {
     var BMap: any = (<any>window)['BMap'];
+    console.log(opts);
+
+    if (opts.zoom) {
+        map.setZoom(opts.zoom);
+    }
     if (opts.center) {
-        if(opts.viewports){
+        if(opts.viewports&& opts.viewports.length > 0){
+            console.log('setviewport');
+            console.log(
+                opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude))
+            )
             map.setViewport(opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
         }else {
+            console.log('setCenter')
             map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
         }
     }
 };
 
 export const reZoom = function(map: any, opts: MapOptions) {
-    if (opts.zoom) {
-        map.setZoom(opts.zoom);
-    }
 };
 
 export const createInstance1 = function(opts: MapOptions, element: any) {

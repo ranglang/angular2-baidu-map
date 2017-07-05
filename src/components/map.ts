@@ -75,7 +75,7 @@ export class BaiduMap implements OnInit, OnChanges {
         }
         let opts = changes['options'].currentValue;
         reCenter(this.map, opts);
-        reZoom(this.map, opts);
+        // reZoom(this.map, opts);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, opts);
         redrawPolyline.bind(this)(this.map, this.polyline, opts)
         createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
@@ -94,6 +94,8 @@ export class BaiduMap implements OnInit, OnChanges {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
+        reCenter(this.map, options);
+        reZoom(this.map, options);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, options);
         redrawPolyline.bind(this)(this.map, this.polyline, options)
         createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)

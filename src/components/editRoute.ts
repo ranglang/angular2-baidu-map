@@ -33,6 +33,14 @@ export interface EditRouteRxState {
     startIndex: number;
     endIndex: number;
     markers: MarkerOptions[];
+    viewports : {
+    longitude: number;
+    latitude: number;
+    }[],
+    routes: {
+        longitude: number;
+        latitude: number;
+    }[]
     enableSearch: boolean;
     enableMarkerClick: boolean;
     editMode: number;
@@ -43,6 +51,8 @@ export const initialState: EditRouteRxState  = {
     endIndex: -1,
     enableMarkerClick: false,
     markers: [],
+    viewports : [],
+    routes: [],
     enableSearch: false,
     editMode: RouteEditMode.SELECT_MODE,
 }
@@ -50,16 +60,13 @@ export const initialState: EditRouteRxState  = {
 export function editRouteReducer(state = initialState, action: any): EditRouteRxState {
     switch (action.type) {
         case EditRouteActions.SET_CLEAR: {
+            console.log('clear');
             return {...state, markers: [], startIndex: -1, endIndex: -1, polyLine: [], enableSearch: false}
         }
         case EditRouteActions.SET_OPTIONS: {
             let mapOpts = action.payload as MapOptions;
-            return {...state, markers: mapOpts.markers, startIndex: -1, endIndex: -1}
+            return {...state, markers: mapOpts.markers, startIndex: -1, endIndex: -1, viewports: mapOpts.markers}
         }
-
-        // case EditRouteActions.SHOW_MARKER: {
-        //     return {...state, editMode: RouteEditMode.SET_AND_MARKER , enableMarkerClick: true};
-        // }
 
         case EditRouteActions.SET_STRAIGHT: {
             return {...state, editMode: RouteEditMode.SET_STRAIGHT};
@@ -248,7 +255,9 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
     template: `
 
     <div id="fixHandleBar" >
-        <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="save()">长传</button>
+        <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="save()">更新</button>
+        
+        
         <div class="startText lineInfo" [ngClass]="{'active': (hasMarkerStart$ | async) }" >起点</div>
         <div id="leftStartCircle lineInfo"  [class.active]="hasMarkerStart$ |async" class="circle" ></div>
         <div class="edit-line-status"  [class.active]="hasLine$ | async" ></div>
@@ -261,8 +270,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             <button  type="button" id="generateRoute"  class="ui-button-secondary" title="直线链接" (click)="_drawStraight()" >直</button>
             <button  type="button" id="generateRoute"  class="ui-button-secondary" title="新增轨迹点" (click)="_draw2Add()" >添</button>
         </div>
-
-        <div>{{(map$ |async).editMode}}</div>
         <div class="applyOrCancel" [class.ui-hide]="(map$ |async).editMode === -1" >
             <button id="applyChange"  type="button"   class="ui-button-info applyIcon" (click)="_applyChange()" >应用</button>
             <button  id="applyCancel"  type="button"   class="ui-button-warning applyIcon" (click)="_applyCancel()">取消</button>
@@ -361,12 +368,17 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
         this._subRes = this.map$.subscribe((res) => {
             this._state = res;
+            console.log('_sub res');
+            console.log(res);
             this._redrawState(res);
         })
     }
 
     _redrawState(s: EditRouteRxState) {
+        console.log('_redrawState')
+        console.log(s);
         if(!this.map) {
+            console.log('this.map return');
             return;
         }
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
@@ -379,27 +391,46 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         if (!baiduMap || baiduMap.status !== MapStatus.LOADED) {
             return;
         }
-        if (changes['options'].isFirstChange() && !this.map) {
+
+
+        // if (changes['options'].isFirstChange() && !this.map) {
+        //     return;
+        // }
+        if(!this.map) {
             return;
         }
+
+        console.log('changes[\'options\']')
+        console.log(changes['options'])
+
         let opts = changes['options'].currentValue;
         reCenter(this.map, opts);
-        reZoom(this.map, opts);
+
+        console.log('ngOnChanges');
+
+        console.log(opts);
+        // reZoom(this.map, opts);
 
         this.store.dispatch(this.action.getSetMapOption(opts))
     }
 
     _draw() {
+        console.log('_draw');
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
+
+        console.log('0000000000000000');
+        console.log(options);
+
         this.map = createInstance(options, this.mapChild.nativeElement);
         this.map.addEventListener('click', e => {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
 
-        //TODO
-        let s = {...initialState, markers: this.options.markers}
-        this._redrawState(s);
+        // TODO
+        // let s = {...initialState, markers: this.options.markers}
+        // this._redrawState(s);
+        this.store.dispatch(this.action.getSetMapOption(options))
     }
 
 _drawSearch () {
@@ -482,13 +513,12 @@ _drawSearch () {
     }
 
     ngOnDestroy(): void {
+        console.log('ngngOnDestroy');
         this.store.dispatch(this.action.setClear());
         if(this._subRes) {
             this._subRes.unsubscribe();
             this._subRes.unsubscribe();
         }
-        // if(this.map$) {
-        // }
     }
 }
 
