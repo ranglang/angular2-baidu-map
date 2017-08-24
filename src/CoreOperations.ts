@@ -25,7 +25,13 @@ export const reCenter = function(map: any, opts: MapOptions) {
             map.setViewport(opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
         }else {
             console.log('setCenter')
-            map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
+            console.log('opts.center');
+            console.log(opts.center);
+            console.log(opts.center.latitude);
+            console.log(opts.center.longitude);
+            if( (opts.center.latitude !== undefined) && (opts.center.longitude !== undefined)) {
+                map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
+            }
         }
     }
 };
@@ -289,6 +295,11 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
                 opts['icon'] = icon;
                 break;
             }
+            case MarkerIcon.RETUREN : {
+                let trace_point_icon  = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {imageOffset: new BMap.Size(0, 0)});
+                opts['icon'] = trace_point_icon;
+                break;
+            }
             case MarkerIcon.ROUTE : {
                 let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
                 opts['icon'] = trace_point_icon;
@@ -348,13 +359,18 @@ export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[
 
     opts.markers.forEach(function(marker: MarkerOptions) {
         var marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+        // marker.indexNum
         if (marker.indexNumber) {
-            console.log('set:  ' + (0 - marker.indexNumber * 25));
-            let icon = new BMap.Icon('/assets/img/60.png', new BMap.Size(23, 25), {
-              offset: new BMap.Size(10, 25),
-              imageOffset: new BMap.Size(0, 0 - (marker.indexNumber  - 1)* 25)
+            let icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
+              offset: new BMap.Size(10, 28),
+              imageOffset: new BMap.Size(0, 0 - (marker.indexNumber )* 28)
             });
             marker2.setIcon(icon);
+        }
+
+        if (marker.category && marker.category === MarkerIcon.RETUREN) {
+            let trace_point_icon  = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {imageOffset: new BMap.Size(0, 0)});
+            marker2.setIcon(trace_point_icon );
         }
 
         map.addOverlay(marker2);

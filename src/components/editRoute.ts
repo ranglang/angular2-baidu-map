@@ -204,7 +204,7 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         }
         
         #container {
-            height: 100vh;   
+            height: 484px;   
         }
         
 .lineInfo {
@@ -256,14 +256,11 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
     <div id="fixHandleBar" >
         <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="save()">更新</button>
-        
-        
         <div class="startText lineInfo" [ngClass]="{'active': (hasMarkerStart$ | async) }" >起点</div>
         <div id="leftStartCircle lineInfo"  [class.active]="hasMarkerStart$ |async" class="circle" ></div>
         <div class="edit-line-status"  [class.active]="hasLine$ | async" ></div>
         <div id="rightEndCircle lineInfo"  class="circle"  [class.active]="hasLine$ |async" ></div>
         <div class="startText lineInfo"   [class.active]="hasMarkerEnd$ | async">终点</div>
-        
         <!--[ngClass]="{'ui-hide': (!(DATA.start_marker && DATA.end_marker)) || DATA.edit_mode }"-->
         <div class="lineEditArea" [class.ui-hide]="((map$ |async).editMode !== -1) &&((map$ |async).startIndex !== -1) && ((map$ |async).endIndex !== -1)">
             <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="_drawSearch()" >自</button>
