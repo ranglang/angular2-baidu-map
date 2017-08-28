@@ -122,7 +122,7 @@ export const redrawDriveRoute = function (map: any, previousMarkers: PreviousSta
                 map.removeOverlay(routes[1].marker);
             }
         });
-        route._updateDriveRoute(driving)
+        route._updateDriveRoute(driving);
 
         let a = previousMarkers.markers[state.startIndex].marker.getPosition()
 
@@ -231,13 +231,14 @@ export const redrawEditPolyline = function (map: any, previousMarkers: PreviousS
 
 }
 
-export const redrawEditState = function(map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState ) {
+export const redrawEditState = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     let route = this;
     var BMap: any = (<any>window)['BMap'];
-    if(!BMap || !map) {
+    if (!BMap || !map) {
         return;
     }
 
+    // prviousMarksers
     if (previousMarkers) {
         previousMarkers.markers.forEach(markerState => {
             map.removeOverlay(markerState.marker)
@@ -252,51 +253,51 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
         }
 
     } else {
-        route.previousMarkers = {...previousMarkers, markers : []};
+        route.previousMarkers = {...previousMarkers, markers: []};
     }
 
-    if(previousMarkers) {
-        if(previousMarkers.mapListener) {
+    if (previousMarkers) {
+        if (previousMarkers.mapListener) {
             map.setDefaultCursor('default');
             map.removeEventListener('click', previousMarkers.mapListener);
         } else {
         }
     }
 
-
-
-    let start_marker_icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
-        offset: new BMap.Size(10, 25),
-        imageOffset: new BMap.Size(0, 0 - 10 * 25)
+    let start_marker_icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
+        offset: new BMap.Size(10, 28),
+        imageOffset: new BMap.Size(0, 0 - 101 * 28)
     });
 
-    let destination_marker_icon = new BMap.Icon('/assets/img/markers_yellow.png', new BMap.Size(23, 25), {
-        offset: new BMap.Size(10, 25),
-        imageOffset: new BMap.Size(0, 0)
+    let destination_marker_icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
+        offset: new BMap.Size(10, 28),
+        imageOffset: new BMap.Size(0, 0 - 102 * 28)
     });
 
-    let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
+    let trace_point_icon = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
 
-        let onMenuItemSetStartListener = function () {
-            route._setStart(this.getPosition());
-        }
+    let onMenuItemSetStartListener = function () {
+        console.log('setStartMarkder');
+        route._setStart(this.getPosition());
+    }
 
-        let onMenuItemSetDestinationListener = function () {
-            route._setEnd(this.getPosition());
-        }
+    let onMenuItemSetDestinationListener = function () {
+        console.log('setStartEnd');
+        route._setEnd(this.getPosition());
+    }
 
     route.previousMarkers.markers.length = 0;
     let a = [];
 
-    if(state.markers) {
+    if (state.markers) {
         switch (state.editMode) {
             case RouteEditMode.SET_AND_MARKER: {
-                state.markers.forEach(function(marker: MarkerOptions, index ) {
-                    if(index <= state.startIndex || index >= state.endIndex) {
+                state.markers.forEach(function (marker: MarkerOptions, index) {
+                    if (index <= state.startIndex || index >= state.endIndex) {
                         let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-                        if(index === state.startIndex) {
+                        if (index === state.startIndex) {
                             marker2.setIcon(start_marker_icon);
-                        } else if(index === state.endIndex){
+                        } else if (index === state.endIndex) {
                             marker2.setIcon(destination_marker_icon);
                         } else {
                             marker2.setIcon(trace_point_icon);
@@ -311,8 +312,8 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
                 break;
             }
             case RouteEditMode.SET_STRAIGHT: {
-                state.markers.forEach(function(marker: MarkerOptions, index ) {
-                    if(index <= state.startIndex || index >= state.endIndex) {
+                state.markers.forEach(function (marker: MarkerOptions, index) {
+                    if (index <= state.startIndex || index >= state.endIndex) {
                         let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
                         a.push({
                             marker: marker2,
@@ -324,7 +325,7 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
                 break;
             }
             case RouteEditMode.DRIVIVE_ROUTE: {
-                state.markers.forEach(function(marker: MarkerOptions, index ) {
+                state.markers.forEach(function (marker: MarkerOptions, index) {
                     let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
                     a.push({
                         marker: marker2,
@@ -336,7 +337,7 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
             }
             default: {
                 console.log('default foreach ')
-                if(state.markers) {
+                if (state.markers) {
                     state.markers.forEach(function (marker: MarkerOptions, index) {
                         let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
                         if (index === state.startIndex) {
@@ -369,13 +370,13 @@ export const redrawEditState = function(map: any, previousMarkers: PreviousState
     }
 
     function markClick(event) {
-        let marker =  new BMap.Marker(event.point, {icon: trace_point_icon});
+        let marker = new BMap.Marker(event.point, {icon: trace_point_icon});
         map.addOverlay(marker);
         route.addToCurrentPoints(marker);
         drawCurrentPoint(state.markers[state.startIndex], state.markers[state.endIndex], map, route.previousMarkers, route);
     }
 
-    if(state.enableMarkerClick) {
+    if (state.enableMarkerClick) {
         route.previousMarkers.currentPoints = [];
         map.setDefaultCursor('crosshair');
         map.addEventListener('click', markClick);

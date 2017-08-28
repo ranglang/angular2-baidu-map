@@ -16,7 +16,7 @@ import { loader } from '../Loader';
 import {Store} from '@ngrx/store';
 import { Action } from '@ngrx/store';
 import {
-    reCenter, reZoom, redrawMarkers, createInstance, redrawPolyline, createAutoComplete,
+    reCenter, redrawMarkers, createInstance, redrawPolyline, createAutoComplete,
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit, createMarker
 } from '../CoreOperations';
 import {PreviousPolygon} from "../interfaces/PreviousPolygon";
@@ -60,7 +60,6 @@ export const initialState: EditRouteRxState  = {
 export function editRouteReducer(state = initialState, action: any): EditRouteRxState {
     switch (action.type) {
         case EditRouteActions.SET_CLEAR: {
-            console.log('clear');
             return {...state, markers: [], startIndex: -1, endIndex: -1, polyLine: [], enableSearch: false}
         }
         case EditRouteActions.SET_OPTIONS: {
@@ -73,22 +72,33 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
         }
 
         case EditRouteActions.SET_START: {
-            if(state.endIndex) {
+            console.log('EditRouteActions.SET_START');
+            if(state.endIndex !== -1 ) {
                 let s = action.payload < state.endIndex ? action.payload  : state.endIndex;
                 let e = action.payload > state.endIndex ? action.payload : state.endIndex;
-                return {...state, startIndex: s, endIndex: e};
+                return {...state,
+                    viewports: [],
+                    startIndex: s, endIndex: e};
             } else {
-                return {...state, startIndex: action.payload};
+                return {...state,
+                    viewports: [],
+                    startIndex: action.payload};
             }
         }
 
         case EditRouteActions.SET_END: {
-            if(state.startIndex) {
+
+            console.log('EditRouteActions.SET_END');
+            if(state.startIndex !== - 1) {
                 let s = state.startIndex < action.payload ? state.startIndex : action.payload;
                 let e = state.startIndex > action.payload ? state.startIndex : action.payload;
-                return {...state, startIndex: s, endIndex: e};
+                return {...state,
+                    viewports: [],
+                    startIndex: s, endIndex: e};
             } else {
-                return {...state, endIndex: action.payload};
+                return {...state,
+                    viewports: [],
+                    endIndex: action.payload};
             }
         }
 
@@ -175,7 +185,7 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
     changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'edit-route',
     styles: [`
-        .offlinePanel{
+        .offlinePanel {
             width: 100%;
             height: 100%;
             background-color: #E6E6E6;
@@ -184,124 +194,116 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             align-items: center;
             opacity: 0;
         }
-        .offlineLabel{
+
+        .offlineLabel {
             font-size: 30px;
         }
-        
+
         #fixHandleBar {
-        position: absolute;
-        display: flex;
-        left: 2.5em;
-        top: 2.5em;
-        padding-left: 2.5em;
-        padding-right: 2.5em;
-        padding-top: 1.5625em;
-        padding-bottom: 1.5625em;
-        z-index: 98;
-        height: 20px;
-        border-radius: 10px;
-        background-color: white;
+            position: absolute;
+            display: flex;
+            left: 2.5em;
+            top: 2.5em;
+            padding-left: 2.5em;
+            padding-right: 2.5em;
+            padding-top: 1.5625em;
+            padding-bottom: 1.5625em;
+            z-index: 98;
+            height: 20px;
+            border-radius: 10px;
+            background-color: white;
         }
-        
+
         #container {
-            height: 484px;   
+            height: 484px;
         }
-        
-.lineInfo {
-  width: 144px;
-}
 
-.startText {
-  width: 36px;
-  font-size: 18px;
-  color: rgb(204,204,204);
-  text-align: center;
-  padding-left: 3px;
-  padding-right: 3px;
-}
+        .lineInfo {
+            width: 144px;
+        }
 
+        .startText {
+            width: 36px;
+            font-size: 18px;
+            color: rgb(204, 204, 204);
+            text-align: center;
+            padding-left: 3px;
+            padding-right: 3px;
+        }
 
-.circle.active {
-  background-color: green;
-}
+        .circle.active {
+            background-color: green;
+        }
 
-.circle {
-  margin-top : 6px;
-  width:10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: rgb(204, 204, 204);
-}
-.startText.active {
-  color: rgb(37,40,39);
-}
+        .circle {
+            margin-top: 6px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgb(204, 204, 204);
+        }
 
+        .startText.active {
+            color: rgb(37, 40, 39);
+        }
 
-.edit-line-status {
-  margin-top : 9px;
-  width: 59px;
-  border-top-style: solid;
-  border-top-width: 3px;
-  padding-top: 4px;
-  border-top-color: rgb(204, 204, 204);
-}
+        .edit-line-status {
+            margin-top: 9px;
+            width: 59px;
+            border-top-style: solid;
+            border-top-width: 3px;
+            padding-top: 4px;
+            border-top-color: rgb(204, 204, 204);
+        }
 
-.edit-line-status.active {
-  border-top-color: rgb(37,40,39);
+        .edit-line-status.active {
+            border-top-color: rgb(37, 40, 39);
 
-
-}
+        }
     `],
     template: `
 
-    <div id="fixHandleBar" >
-        <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="save()">更新</button>
-        <div class="startText lineInfo" [ngClass]="{'active': (hasMarkerStart$ | async) }" >起点</div>
-        <div id="leftStartCircle lineInfo"  [class.active]="hasMarkerStart$ |async" class="circle" ></div>
-        <div class="edit-line-status"  [class.active]="hasLine$ | async" ></div>
-        <div id="rightEndCircle lineInfo"  class="circle"  [class.active]="hasLine$ |async" ></div>
-        <div class="startText lineInfo"   [class.active]="hasMarkerEnd$ | async">终点</div>
-        <!--[ngClass]="{'ui-hide': (!(DATA.start_marker && DATA.end_marker)) || DATA.edit_mode }"-->
-        <div class="lineEditArea" [class.ui-hide]="((map$ |async).editMode !== -1) &&((map$ |async).startIndex !== -1) && ((map$ |async).endIndex !== -1)">
-            <button  type="button" id="generateRoute"  class="ui-button-secondary" title="自动推荐轨迹点" (click)="_drawSearch()" >自</button>
-            <button  type="button" id="generateRoute"  class="ui-button-secondary" title="直线链接" (click)="_drawStraight()" >直</button>
-            <button  type="button" id="generateRoute"  class="ui-button-secondary" title="新增轨迹点" (click)="_draw2Add()" >添</button>
+        <div id="fixHandleBar">
+            <button type="button" id="generateRoute" class="ui-button-secondary" title="自动推荐轨迹点" (click)="save()">更新
+            </button>
+            <!--[ngClass]="{'active': (hasMarkerStart$ | async) }" -->
+            <div class="startText lineInfo">起点</div>
+            <!--[class.active]="hasMarkerStart$ |async"-->
+
+            <div id="leftStartCircle lineInfo" class="circle"></div>
+            <!--[class.active]="hasLine$ | async" -->
+            <div class="edit-line-status"></div>
+            <!--[class.active]="hasLine$ |async"-->
+            <div id="rightEndCircle lineInfo" class="circle"></div>
+
+            <!--[class.active]="hasMarkerEnd$ | async"-->
+            <div class="startText lineInfo">终点</div>
+            <!--[ngClass]="{'ui-hide': (!(DATA.start_marker && DATA.end_marker)) || DATA.edit_mode }"-->
+            <div class="lineEditArea"
+                 [class.ui-hide]="(state.editMode !== -1) &&(state.startIndex !== -1) && (state.endIndex !== -1)">
+                <button type="button" id="generateRoute" class="ui-button-secondary" title="自动推荐轨迹点"
+                        (click)="_drawSearch()">自
+                </button>
+                <button type="button" id="generateRoute" class="ui-button-secondary" title="直线链接"
+                        (click)="_drawStraight()">直
+                </button>
+                <button type="button" id="generateRoute" class="ui-button-secondary" title="新增轨迹点"
+                        (click)="_draw2Add()">添
+                </button>
+            </div>
+            <div class="applyOrCancel" [class.ui-hide]="state.editMode === -1">
+                <button id="applyChange" type="button" class="ui-button-info applyIcon" (click)="_applyChange()">应用
+                </button>
+                <button id="applyCancel" type="button" class="ui-button-warning applyIcon" (click)="_applyCancel()">取消
+                </button>
+            </div>
         </div>
-        <div class="applyOrCancel" [class.ui-hide]="(map$ |async).editMode === -1" >
-            <button id="applyChange"  type="button"   class="ui-button-info applyIcon" (click)="_applyChange()" >应用</button>
-            <button  id="applyCancel"  type="button"   class="ui-button-warning applyIcon" (click)="_applyCancel()">取消</button>
+        <div id="container" #map>
+
         </div>
-    </div>
-    <div id="container" #map>
-    
-    </div>
         <div class="offlinePanel">
             <label class="offlineLabel">{{ offlineWords }}</label>
         </div>
-        
-        <!--[ngClass]="{'active': DATA.start_marker }"-->
-        <!--<div id="leftStartCircle lineInfo"  [ngClass]="{'active': DATA.start_marker }" class="circle" ></div>-->
-        <!--<div id="edit-line-status" [ngClass]="{'active': DATA.editing_line }"  ></div>-->
-        <!--<div id="rightEndCircle lineInfo"  class="circle" [ngClass]="{'active': DATA.end_marker }" ></div>-->
-        <!--<div class="startText lineInfo"   [ngClass]="{'active': DATA.end_marker }">终点</div>-->
-        <!--<div class="lineEditArea" [ngClass]="{'ui-hide': (!(DATA.start_marker && DATA.end_marker)) || DATA.edit_mode }">-->
-            <!--<button id="addstraigLine" uButton type="button"   class="ui-button-secondary" icon="fa-italic" title="改为直线连接" uTooltip="改为直线连接" tooltipPosition="bottom"></button>-->
-            <!--<button uButton type="button" id="generateRoute"  class="ui-button-secondary" icon="fa-magic" title="自动推荐轨迹点" uTooltip="自动推荐轨迹点" tooltipPosition="bottom"></button>-->
-            <!--<button uButton type="button"  id="addNewPoint" [ngClass]="{'ui-hide': (DATA.locationArray[1] - DATA.locationArray[0]) !== 1 }"  class="ui-button-secondary" icon="fa-plus-circle"-->
-                    <!--uTooltip = "添加途径线路点"  tooltipPosition="bottom"-->
-                    <!--title="添加途径线路点"></button>-->
-            <!--<button uButton type="button"-->
-                    <!--uTooltip = "编辑该线段"  tooltipPosition="bottom"-->
-                    <!--id="editThePoint"  class="ui-button-secondary" icon="fa-pencil-square" title="编辑该线段" ></button>-->
-        <!--</div>-->
-        <!--<div class="applyOrCancel" *ngIf="loadinig">-->
-            <!--<button uButton type="button"   class="ui-button-info applyIcon" icon="fa-circle-o-notch fa-spin" title="loading"  disabled></button>-->
-        <!--</div>-->
-        <!--<div class="applyOrCancel"  [ngClass]="{'ui-hide': (!DATA.edit_mode || loadinig) }" >-->
-            <!--<button id="applyChange" uButton type="button"   class="ui-button-info applyIcon" icon="fa-check" title="应用该变更"  ></button>-->
-            <!--<button  id="applyCancel" uButton type="button"   class="ui-button-warning applyIcon" icon="fa-reply" title="取消本次修改"></button>-->
-        <!--</div>-->
-    
     `
 })
 export class EditRoute implements OnInit, OnChanges, OnDestroy {
@@ -323,37 +325,36 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     map: any;
     offlineWords: string;
     // previousMarkers: PreviousMarker[] = [];
-    previousAutoComplete : PreviousAutoComplete;
+    previousAutoComplete: PreviousAutoComplete;
+    previousPolyLine: PreviousEditPolyLine;
+    previousPolygon: PreviousPolygon;
 
-    previousPolyLine : PreviousEditPolyLine;
-
-    previousPolygon : PreviousPolygon;
     polyline: any;
 
     markerHandler: MarkerHandler;
 
     previousMarkers: PreviousStateMarker;
 
-    public _state : EditRouteRxState;
-    public map$ : Observable<EditRouteRxState>;
-    public hasMarkerStart$ : Observable<boolean>;
-    public hasMarkerEnd$ : Observable<boolean>;
-    public hasLine$ : Observable<boolean>;
+    public state: EditRouteRxState;
+    public map$: Observable<EditRouteRxState>;
+    // public hasMarkerStart$ : Observable<boolean>;
+    // public hasMarkerEnd$ : Observable<boolean>;
+    // public hasLine$ : Observable<boolean>;
 
-    private  _subRes: Subscription;
+    private _subRes: Subscription;
+
     constructor(private el: ElementRef,
                 private _ngZone: NgZone,
                 private  action: EditRouteActions,
-                private store: Store<AppRxState>,
-    ) {
+                private store: Store<AppRxState>) {
 
-        this.map$= this.store.select(res => {
+        this.map$ = this.store.select(res => {
             return res.routeEdit;
         });
 
-        this.hasMarkerStart$ = this.store.select(res => res.routeEdit.startIndex !== -1 )
-        this.hasMarkerEnd$ = this.store.select(res => res.routeEdit.endIndex !== -1 )
-        this.hasLine$ = this.store.select(res => (res.routeEdit.endIndex !== -1  && res.routeEdit.startIndex !== -1))
+        // this.hasMarkerStart$ = this.store.select(res => res.routeEdit.startIndex !== -1 )
+        // this.hasMarkerEnd$ = this.store.select(res => res.routeEdit.endIndex !== -1 )
+        // this.hasLine$ = this.store.select(res => (res.routeEdit.endIndex !== -1  && res.routeEdit.startIndex !== -1))
 
     }
 
@@ -364,18 +365,14 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         loader(this.ak, offlineOpts, this._draw.bind(this), this.protocol, 'edit-route');
 
         this._subRes = this.map$.subscribe((res) => {
-            this._state = res;
-            console.log('_sub res');
-            console.log(res);
+            this.state = res;
+            console.log('state %%%%%%%%%%%%%%%%%%%%%%%%%%%%')
             this._redrawState(res);
         })
     }
 
     _redrawState(s: EditRouteRxState) {
-        console.log('_redrawState')
-        console.log(s);
-        if(!this.map) {
-            console.log('this.map return');
+        if (!this.map) {
             return;
         }
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
@@ -389,34 +386,24 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
             return;
         }
 
-
         // if (changes['options'].isFirstChange() && !this.map) {
         //     return;
         // }
-        if(!this.map) {
+
+        if (!this.map) {
             return;
         }
 
-        console.log('changes[\'options\']')
-        console.log(changes['options'])
-
         let opts = changes['options'].currentValue;
+
+        console.log('reCenter');
         reCenter(this.map, opts);
-
-        console.log('ngOnChanges');
-
-        console.log(opts);
-        // reZoom(this.map, opts);
 
         this.store.dispatch(this.action.getSetMapOption(opts))
     }
 
     _draw() {
-        console.log('_draw');
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
-
-        console.log('0000000000000000');
-        console.log(options);
 
         this.map = createInstance(options, this.mapChild.nativeElement);
         this.map.addEventListener('click', e => {
@@ -430,9 +417,10 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.store.dispatch(this.action.getSetMapOption(options))
     }
 
-_drawSearch () {
+    _drawSearch() {
         this.store.dispatch(this.action.setDrive())
-}
+    }
+
     _drawStraight() {
         this.store.dispatch(this.action.setStraight());
     }
@@ -444,6 +432,7 @@ _drawSearch () {
     _applyCancel() {
         this.store.dispatch(this.action.cancelChange());
     }
+
     _applyChange() {
         this.store.dispatch(this.action.applyChange(this.previousMarkers.currentPoints));
     }
@@ -473,46 +462,50 @@ _drawSearch () {
 
     _getPolyLine(): PolyLineSate[] {
         // this.previousMarkers = {...this.previousMarkers, polyLine: [{polyLine: a, listeners: []}]}
-        return this.previousMarkers.polyLine ? this.previousMarkers.polyLine: [];
+        return this.previousMarkers.polyLine ? this.previousMarkers.polyLine : [];
     }
+
     _updatePolyLine(a: any) {
         this.previousMarkers = {...this.previousMarkers, polyLine: [{polyLine: a, listeners: []}]}
     }
+
     _updateCurrentMarker(opts) {
         var BMap: any = (<any>window)['BMap'];
-        this.previousMarkers = {...this.previousMarkers, currentPoints: opts.map(res => {
-             return {
-                 marker: new BMap.Marker(res),
-                 listener: []
-             }
-        })}
+        this.previousMarkers = {
+            ...this.previousMarkers, currentPoints: opts.map(res => {
+                return {
+                    marker: new BMap.Marker(res),
+                    listener: []
+                }
+            })
+        }
     }
 
     _draw2Add() {
         this.store.dispatch(this.action.setEnableAddMarker());
     }
 
-    addToCurrentPoints (marker) {
-            this.previousMarkers.currentPoints.push({
-                marker:marker,
-                listeners: []
-            })
+    addToCurrentPoints(marker) {
+        this.previousMarkers.currentPoints.push({
+            marker: marker,
+            listeners: []
+        })
     }
+
     /**
      * save data
      */
     save() {
-        this.onSave.emit(this._state.markers);
+        this.onSave.emit(this.state.markers);
     }
 
-    getPreviousMarkers () {
-     return   this.previousMarkers ;
+    getPreviousMarkers() {
+        return this.previousMarkers;
     }
 
     ngOnDestroy(): void {
-        console.log('ngngOnDestroy');
         this.store.dispatch(this.action.setClear());
-        if(this._subRes) {
+        if (this._subRes) {
             this._subRes.unsubscribe();
             this._subRes.unsubscribe();
         }

@@ -10,33 +10,22 @@ import {BaiduMap} from "./components/map";
 import {PreviousPolygon} from "./interfaces/PreviousPolygon";
 
 export const reCenter = function(map: any, opts: MapOptions) {
+    console.log('begin to reCentering');
     var BMap: any = (<any>window)['BMap'];
-    console.log(opts);
-
     if (opts.zoom) {
         map.setZoom(opts.zoom);
     }
     if (opts.center) {
-        if(opts.viewports&& opts.viewports.length > 0){
-            console.log('setviewport');
-            console.log(
-                opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude))
-            )
+        if(opts.viewports && opts.viewports.length > 0){
+            console.log('centering by setviewport');
             map.setViewport(opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
-        }else {
-            console.log('setCenter')
-            console.log('opts.center');
-            console.log(opts.center);
-            console.log(opts.center.latitude);
-            console.log(opts.center.longitude);
+        } else {
+            console.log('set by center')
             if( (opts.center.latitude !== undefined) && (opts.center.longitude !== undefined)) {
                 map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
             }
         }
     }
-};
-
-export const reZoom = function(map: any, opts: MapOptions) {
 };
 
 export const createInstance1 = function(opts: MapOptions, element: any) {
@@ -81,6 +70,7 @@ export  const reCreatePolygon = function (
     previousPolygon :PreviousPolygon,
     opts: MapOptions
 ) {
+    console.log('reCreatePolygon');
 
     var BMap: any = (<any>window)['BMap'];
     let self = this;
