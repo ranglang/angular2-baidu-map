@@ -269,7 +269,25 @@ export const redrawStops= function (map: any, previousMarkers: PreviousStateMark
             map.addOverlay(marker2);
             let previousMarker: MarkerSate = { marker: marker2, listeners: [], contextmenu: undefined};
             previousMarkers.stops.push(previousMarker);
+
+            if (!marker.title && !marker.content) {
+                return;
+            }
+            let msg = `<p>${marker.title || ''}</p><p>${marker.content || ''}</p>`;
+            let infoWindow2 = new BMap.InfoWindow(msg, {
+                enableMessage: !!marker.enableMessage
+            });
+            if (marker.autoDisplayInfoWindow) {
+                marker2.openInfoWindow(infoWindow2);
+            }
+            let openInfoWindowListener = function() {
+                // console.log('openInfoWindowListener ');
+                this.openInfoWindow(infoWindow2);
+            };
+            previousMarker.listeners.push(openInfoWindowListener);
+            marker2.addEventListener('click', openInfoWindowListener);
         })
+
     }
 }
 

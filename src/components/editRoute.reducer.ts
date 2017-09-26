@@ -17,11 +17,25 @@ export const initialState: EditRouteRxState  = {
     editMode: RouteEditMode.SELECT_MODE,
 }
 
+
+function filterAnable(state: EditRouteRxState): EditRouteRxState {
+
+    return {...state,
+        stops: state.stops.map(res => ({...res,
+            autoDisplayInfoWindow: false
+        }))
+    }
+
+    // return state;
+}
 export function editRouteReducer(state = initialState, action: any): EditRouteRxState {
+
+
+
+
 
     // console.log('editRouteReducer');
     // console.log(action);
-    console.log(action.type);
     // console.log(state);
     switch (action.type) {
         case EditRouteActions.SET_CLEAR: {
@@ -32,13 +46,15 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             let mapOpts = action.payload as MapOptions;
             console.log('reducer');
             console.log(mapOpts);
-            return {...state,
+            let a =  {...state,
                 markers: mapOpts.markers,
                 startIndex: -1,
                 endIndex: -1,
                 stops: mapOpts.stops,
                 viewports: mapOpts.markers}
+                return filterAnable(a);
         }
+
         case  EditRouteActions.UPDATE_ROUTE_POINT: {
             let routePointList = action.payload;
 
@@ -49,7 +65,7 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             //           latitude: res.lat,
             //           category: MarkerIcon.ROUTE
             //         })),
-            return {...state,
+            let a = {...state,
                 markers: routePointList.map(res => ({
                           longitude: res.lng,
                           latitude: res.lat,
@@ -60,24 +76,34 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                 // stops: mapOpts.stops,
                 // viewports: mapOpts.markers
             }
+            return filterAnable(a)
         }
 
         case EditRouteActions.SET_STRAIGHT: {
             return {...state, editMode: RouteEditMode.SET_STRAIGHT};
+        }
+        case EditRouteActions.UPDATE_SHOW_STOP_INFO : {
+            let stop = action.payload;
+           return {...state,
+               stops: state.stops.map(item => ({...item,
+                   autoDisplayInfoWindow: item.longitude === stop.lng && item.latitude === stop.lat,
+               }))
+           }
         }
 
         case EditRouteActions.SET_START: {
             if(state.endIndex !== -1 ) {
                 let s = action.payload < state.endIndex ? action.payload  : state.endIndex;
                 let e = action.payload > state.endIndex ? action.payload : state.endIndex;
-                return {...state,
+                return filterAnable({...state,
                     viewports: [],
-                    startIndex: s, endIndex: e};
+                    startIndex: s, endIndex: e});
             } else {
-                return {...state,
+                return filterAnable({...state,
                     viewports: [],
-                    startIndex: action.payload};
+                    startIndex: action.payload});
             }
+
         }
 
         case EditRouteActions.SET_END: {
@@ -85,13 +111,13 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             if(state.startIndex !== - 1) {
                 let s = state.startIndex < action.payload ? state.startIndex : action.payload;
                 let e = state.startIndex > action.payload ? state.startIndex : action.payload;
-                return {...state,
+                return filterAnable({...state,
                     viewports: [],
-                    startIndex: s, endIndex: e};
+                    startIndex: s, endIndex: e});
             } else {
-                return {...state,
+                return filterAnable({...state,
                     viewports: [],
-                    endIndex: action.payload};
+                    endIndex: action.payload});
             }
         }
 

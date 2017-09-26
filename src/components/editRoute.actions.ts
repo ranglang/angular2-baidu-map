@@ -80,5 +80,13 @@ export class EditRouteActions {
             payload: data
         };
     }
+
+    static UPDATE_SHOW_STOP_INFO = '[ROUTE POINT ] update show stop info';
+    public updateShowStopInfo(stop: any): Action {
+        return {
+            type: EditRouteActions.UPDATE_SHOW_STOP_INFO,
+            payload: stop
+        };
+    }
 }
 
