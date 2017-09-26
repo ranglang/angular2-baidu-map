@@ -14,7 +14,14 @@ export interface PreviousEditPolyLine {
 export interface MarkerSate {
     marker: any;
     listeners: Function[];
+    contextmenu: any;
 }
+
+// export interface MarkerState {
+//     marker: any;
+//     cxm ?: any;
+//     listeners: Function[];
+// }
 
 export interface PolyLineSate {
     polyLine: any;
@@ -22,6 +29,7 @@ export interface PolyLineSate {
 }
 
 export interface PreviousStateMarker {
+    stops: MarkerSate[];
     markers: MarkerSate[];
     polyLine ?: PolyLineSate[];
     drivingRoute: any;
@@ -33,11 +41,6 @@ export interface PreviousStateMarker {
 //     markers: MarkerSate[]
 // }
 
-export interface PreviousMarker {
-    marker: any;
-    cxm ?: any;
-    listeners: Function[];
-}
 
 export interface PreviousAutoComplete {
     autoComplete: any;

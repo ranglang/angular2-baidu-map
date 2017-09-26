@@ -32,19 +32,24 @@
   "peerDependencies": {
     "@angular/common": "~4.2.4",
     "@angular/core": "~4.2.4",
-    "rxjs": "~5.4.1",
-    "zone.js": "^0.8.12",
     "@ngrx/core": "^1.2.0",
     "@ngrx/effects": "^2.0.3",
-    "@ngrx/store": "^2.2.2"
+    "@ngrx/store": "^2.2.2",
+    "rxjs": "~5.4.1",
+    "zone.js": "^0.8.12"
   },
   "devDependencies": {
+    "@angular/animations": "~4.2.4",
     "@angular/common": "~4.2.4",
     "@angular/compiler": "~4.2.4",
     "@angular/compiler-cli": "^4.2.4",
     "@angular/core": "~4.2.4",
+    "@angular/forms": "~4.2.4",
     "@angular/platform-browser": "~4.2.4",
     "@angular/platform-browser-dynamic": "~4.2.4",
+    "@ngrx/core": "^1.2.0",
+    "@ngrx/effects": "^2.0.3",
+    "@ngrx/store": "^2.2.2",
     "@types/core-js": "^0.9.42",
     "@types/webpack-env": "^1.13.0",
     "autoprefixer": "^7.1.1",
@@ -59,12 +64,15 @@
     "style-loader": "^0.18.2",
     "ts-loader": "2.2.0",
     "typescript": "~2.3.4",
+    "u-clarity-angular": "^0.10.0-alpha.9",
+    "u-clarity-icons": "^0.10.0-alpha.9",
+    "u-clarity-ui": "^0.10.0-alpha.9",
     "unminified-webpack-plugin": "^1.2.0",
     "webpack": "~2.6.1",
     "webpack-dev-server": "^2.5.0",
-    "zone.js": "^0.8.12",
-    "@ngrx/core": "^1.2.0",
-    "@ngrx/effects": "^2.0.3",
-    "@ngrx/store": "^2.2.2"
+    "zone.js": "^0.8.12"
+  },
+  "dependencies": {
+    "date-fns": "^1.28.5"
   }
 }

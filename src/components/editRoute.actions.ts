@@ -72,5 +72,13 @@ export class EditRouteActions {
             type: EditRouteActions.SET_CLEAR,
         };
     }
+
+    static UPDATE_ROUTE_POINT = '[ROUTE POINT ] UPDATE Route point';
+    public updateRoutePoint(data: any): Action {
+        return {
+            type: EditRouteActions.UPDATE_ROUTE_POINT,
+            payload: data
+        };
+    }
 }
 

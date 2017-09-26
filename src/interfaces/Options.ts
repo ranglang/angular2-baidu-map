@@ -44,6 +44,7 @@ export interface MapOptions extends MapDefaultOptions {
 
     markers?: MarkerOptions[];
     routes?: RouteOptions[];
+    stops ?: MarkerOptions[];
     polygon?: RouteOptions[];
 }
 

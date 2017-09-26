@@ -1,5 +1,5 @@
 import {MapOptions, MarkerOptions} from './interfaces/Options';
-import {PreviousAutoComplete, PreviousMarker} from './interfaces/PreviousMarker';
+// import {PreviousAutoComplete, MarkerState} from './interfaces/MarkerState';
 
 import {setGeoCtrl} from './controls/GeoControl';
 import {setScaleCtrl} from './controls/ScaleControl';
@@ -8,19 +8,18 @@ import {setNavigationCtrl} from './controls/NavigationControl';
 import {MarkerIcon} from "./enum/ControlAnchor";
 import {BaiduMap} from "./components/map";
 import {PreviousPolygon} from "./interfaces/PreviousPolygon";
+import {BMapLib} from "./interfaces/MapObjct";
+import {MarkerSate, PreviousAutoComplete} from "./interfaces/PreviousMarker";
 
 export const reCenter = function(map: any, opts: MapOptions) {
-    console.log('begin to reCentering');
     var BMap: any = (<any>window)['BMap'];
     if (opts.zoom) {
         map.setZoom(opts.zoom);
     }
     if (opts.center) {
         if(opts.viewports && opts.viewports.length > 0){
-            console.log('centering by setviewport');
             map.setViewport(opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
         } else {
-            console.log('set by center')
             if( (opts.center.latitude !== undefined) && (opts.center.longitude !== undefined)) {
                 map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
             }
@@ -70,8 +69,6 @@ export  const reCreatePolygon = function (
     previousPolygon :PreviousPolygon,
     opts: MapOptions
 ) {
-    console.log('reCreatePolygon');
-
     var BMap: any = (<any>window)['BMap'];
     let self = this;
 
@@ -157,8 +154,7 @@ export  const reCheckEditPolygon = function (
 export const createAutoComplete = function (
     map: any,
                                             previousAutoComplete : PreviousAutoComplete,
-                                            opts: MapOptions
-) {
+                                            opts: MapOptions) {
     var BMap: any = (<any>window)['BMap'];
     var self = this;
 
@@ -169,10 +165,10 @@ export const createAutoComplete = function (
         return document.getElementById(id);
     }
 
-    let el = G('suggestId');
+    // let el = G('suggestId');
 
-    if(previousAutoComplete) {
-        previousAutoComplete.listeners.forEach((l)=> {
+    if (previousAutoComplete) {
+        previousAutoComplete.listeners.forEach((l) => {
             previousAutoComplete.autoComplete.removeEventListener('onhighlight', l);
         })
     }
@@ -180,14 +176,16 @@ export const createAutoComplete = function (
     previousAutoComplete = undefined;
 
 
-    if(opts.enableAutoComplete) {
+    if (opts.enableAutoComplete) {
+        // console.log('opts.enableAutoComplete');
         let ac = new BMap.Autocomplete(
             {
                 'input': G('suggestId'),
                 'location': map,
             });
+        // console.log(G('suggestId'));
 
-      let listner =   ac.addEventListener('onhighlight', function (e) {
+        let listner = ac.addEventListener('onhighlight', function (e) {
             let str = '';
             let _value = e.fromitem.value;
             let value = '';
@@ -205,7 +203,7 @@ export const createAutoComplete = function (
             G('searchResultPanel').innerHTML = str;
         });
 
-      let myValue;
+        let myValue;
         let listner2 = ac.addEventListener('onconfirm', function (e) {
             let _value = e.item.value;
             myValue = _value.province + _value.city + _value.district + _value.street + _value.business;
@@ -230,6 +228,8 @@ export const createAutoComplete = function (
 
         previousAutoComplete.listeners.push(listner);
         previousAutoComplete.listeners.push(listner2);
+    } else {
+        // console.log('not enable AutoComplete');
     }
 };
 
@@ -270,12 +270,14 @@ export const createMarkerEdit = function(marker: MarkerOptions, pt: any) {
 export const createMarker = function(marker: MarkerOptions, pt: any) {
     var BMap: any = (<any>window)['BMap'];
     var opts: any = {};
-    if (marker.icon) {
-        var icon = new BMap.Icon(marker.icon, new BMap.Size(marker.width, marker.height));
-        opts['icon'] = icon;
-    }
 
-    if(marker.category) {
+    if (marker.indexNumber) {
+        let icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
+            offset: new BMap.Size(10, 28),
+            imageOffset: new BMap.Size(0, 0 - (marker.indexNumber )* 28)
+        });
+        opts['icon'] = icon;
+    }else if(marker.category) {
         switch(marker.category) {
             case MarkerIcon.STOP : {
                  var icon = new BMap.Icon('http://api.map.baidu.com/img/markers.png', new BMap.Size(23, 25), {
@@ -290,6 +292,11 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
                 opts['icon'] = trace_point_icon;
                 break;
             }
+
+                // if (marker.category && marker.category === MarkerIcon.RETUREN) {
+                //     let trace_point_icon  = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {imageOffset: new BMap.Size(0, 0)});
+                //     marker2.setIcon(trace_point_icon );
+                // }
             case MarkerIcon.ROUTE : {
                 let trace_point_icon  = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
                 opts['icon'] = trace_point_icon;
@@ -302,7 +309,11 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
                 });
                 opts['icon'] = icon;
             }
-
+        }
+    } else {
+        if (marker.icon) {
+            var icon = new BMap.Icon(marker.icon, new BMap.Size(marker.width, marker.height));
+            opts['icon'] = icon;
         }
     }
     if (marker.enableDragging) {
@@ -332,14 +343,30 @@ export const redrawPolyline = function (map: any, polyline: any, opts: MapOption
     }
 }
 
-export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[], opts: MapOptions) {
+export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], opts: MapOptions) {
+    console.log('redrawMarkers ');
     var BMap: any = (<any>window)['BMap'];
     var self = this;
 
+    var markerLab : any = (<any>window)['BMapLib']
+    var markerClusterer;
+    if(markerLab && markerLab.MarkerClusterer && opts.markers.length > 500) {
+        markerClusterer = new markerLab.MarkerClusterer(map, {});
+        console.log('has MarkerClusterer');
+    }else {
+        console.log('no MarkerClusterer');
+    }
+
     previousMarkers.forEach(function({marker, listeners}) {
         listeners.forEach(listener => { marker.removeEventListener('click', listener); });
-        map.removeOverlay(marker);
+        if( !markerClusterer) {
+            map.removeOverlay(marker);
+        }
     });
+
+    if(markerClusterer) {
+        markerClusterer.removeMarkers(previousMarkers.map(res => res.marker));
+    }
 
     previousMarkers.length = 0;
 
@@ -349,22 +376,16 @@ export const redrawMarkers = function(map: any, previousMarkers: PreviousMarker[
 
     opts.markers.forEach(function(marker: MarkerOptions) {
         var marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-        // marker.indexNum
-        if (marker.indexNumber) {
-            let icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
-              offset: new BMap.Size(10, 28),
-              imageOffset: new BMap.Size(0, 0 - (marker.indexNumber )* 28)
-            });
-            marker2.setIcon(icon);
-        }
 
-        if (marker.category && marker.category === MarkerIcon.RETUREN) {
-            let trace_point_icon  = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {imageOffset: new BMap.Size(0, 0)});
-            marker2.setIcon(trace_point_icon );
-        }
 
-        map.addOverlay(marker2);
-        let previousMarker: PreviousMarker = { marker: marker2, listeners: [] };
+
+        // TODO
+        if(markerClusterer) {
+            markerClusterer.addMarker(marker2);
+        }else {
+            map.addOverlay(marker2);
+        }
+        let previousMarker: MarkerSate = { marker: marker2, listeners: [], contextmenu: undefined };
         previousMarkers.push(previousMarker);
 
         let onMarkerClickedListener = () => {
