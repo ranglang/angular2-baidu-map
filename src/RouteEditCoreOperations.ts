@@ -284,23 +284,32 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
     var markerLab : any = (<any>window)['BMapLib']
     var markerClusterer;
 
+    var markerClustererBig = false;
+
     if(markerLab && markerLab.MarkerClusterer && state.markers.length > 300) {
+        markerClustererBig = true;
         markerClusterer = new markerLab.MarkerClusterer(map, {});
         console.log('has MarkerClusterer');
     }else {
+        if(markerLab && markerLab.MarkerClusterer ) {
+            markerClusterer = new markerLab.MarkerClusterer(map, {});
+        }
         console.log('no MarkerClusterer');
     }
+
 
     // prviousMarksers
     if (previousMarkers) {
         // if(markerClusterer) {
             // markerClusterer.removeMarkers(previousMarkers.markers.map(res => res.marker))
         // } else {
+            var preMarkerClusterer = markerLab && markerLab.MarkerClusterer && previousMarkers.markers.length > 300
+
             previousMarkers.markers.forEach(markerState => {
                 if(markerState.contextmenu) {
                     markerState.marker.removeContextMenu(markerState.contextmenu);
                 }
-                if (markerClusterer) {
+                if (preMarkerClusterer) {
                     markerClusterer.removeMarker(markerState.marker)
                 } else {
                     map.removeOverlay(markerState.marker)
@@ -355,7 +364,7 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
     let markers_temps = [];
 
     function addOverlay(marker) {
-        if (markerClusterer) {
+        if (markerClustererBig) {
             markerClusterer.addMarker(marker);
         } else {
             map.addOverlay(marker);

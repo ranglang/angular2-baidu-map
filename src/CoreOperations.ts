@@ -350,21 +350,32 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
 
     var markerLab : any = (<any>window)['BMapLib']
     var markerClusterer;
-    if(markerLab && markerLab.MarkerClusterer && opts.markers.length > 500) {
-        markerClusterer = new markerLab.MarkerClusterer(map, {});
+
+    let markerClustererBig = false;
+    if(markerLab && markerLab.MarkerClusterer && opts.markers.length > 300) {
+        // markerClusterer = new markerLab.MarkerClusterer(map, {});
         console.log('has MarkerClusterer');
+        markerClusterer = new markerLab.MarkerClusterer(map, {});
+        markerClustererBig = true
+
     }else {
+        if(markerLab && markerLab.MarkerClusterer ) {
+            markerClusterer = new markerLab.MarkerClusterer(map, {});
+        }
         console.log('no MarkerClusterer');
     }
 
+    let preMarkerClusterer   = markerLab && markerLab.MarkerClusterer && previousMarkers.length > 300
+
+
     previousMarkers.forEach(function({marker, listeners}) {
         listeners.forEach(listener => { marker.removeEventListener('click', listener); });
-        if( !markerClusterer) {
+        if( !preMarkerClusterer) {
             map.removeOverlay(marker);
         }
     });
 
-    if(markerClusterer) {
+    if(preMarkerClusterer) {
         markerClusterer.removeMarkers(previousMarkers.map(res => res.marker));
     }
 
@@ -376,11 +387,8 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
 
     opts.markers.forEach(function(marker: MarkerOptions) {
         var marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-
-
-
         // TODO
-        if(markerClusterer) {
+        if(markerClustererBig ) {
             markerClusterer.addMarker(marker2);
         }else {
             map.addOverlay(marker2);
@@ -412,6 +420,7 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
             marker2.openInfoWindow(infoWindow2);
         }
         let openInfoWindowListener = function() {
+            // console.log('openInfoWindowListener ');
             this.openInfoWindow(infoWindow2);
         };
         previousMarker.listeners.push(openInfoWindowListener);
@@ -419,10 +428,9 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
     });
 
 
-    // if(opts.markers.length > 0){
+    // if(opts.markers.length > 0) {
     //     map.setViewport(opts.markers.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
     // }
-
 };
 
 
