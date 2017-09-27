@@ -292,6 +292,30 @@ export const redrawStops= function (map: any, previousMarkers: PreviousStateMark
 }
 
 
+export const clearMarker = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
+    let route = this;
+    var BMap: any = (<any>window)['BMap'];
+    if (!BMap || !map) {
+        return;
+    }
+
+    var markerLab : any = (<any>window)['BMapLib']
+
+    let markerClusterer;
+    if(markerLab && markerLab.MarkerClusterer) {
+        markerClusterer = new markerLab.MarkerClusterer(map, {});
+    }
+
+
+    previousMarkers.markers.forEach(markerState => {
+        if(markerState.contextmenu) {
+            markerState.marker.removeContextMenu(markerState.contextmenu);
+        }
+        map.removeOverlay(markerState.marker);
+        markerClusterer.removeMarker(markerState.marker)
+    });
+}
+
 export const redrawEditState = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     let route = this;
     var BMap: any = (<any>window)['BMap'];
@@ -318,11 +342,7 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
 
     // prviousMarksers
     if (previousMarkers) {
-        // if(markerClusterer) {
-            // markerClusterer.removeMarkers(previousMarkers.markers.map(res => res.marker))
-        // } else {
             var preMarkerClusterer = markerLab && markerLab.MarkerClusterer && previousMarkers.markers.length > 300
-
             previousMarkers.markers.forEach(markerState => {
                 if(markerState.contextmenu) {
                     markerState.marker.removeContextMenu(markerState.contextmenu);
@@ -333,10 +353,6 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
                     map.removeOverlay(markerState.marker)
                 }
             });
-
-        // }
-
-        // markerClusterer.removeMarkers(previousMarkers.map(res => res.marker));
 
         previousMarkers.markers.length = 0;
         if (previousMarkers.currentPoints) {

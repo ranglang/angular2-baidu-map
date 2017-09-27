@@ -174,29 +174,52 @@ export interface EditRouteRxState {
             <div class="startText lineInfo" [ngClass]="{'active': state.endIndex !== -1}" >终点</div>
             
             <div class="lineEditArea" [ngClass]="{'ui-hide': state.startIndex === -1 || state.endIndex === -1 || state.editMode !== -1}">
-                <button class="btn btn-primary" (click)="_drawSearch()" uTooltip="自动推荐轨迹点" tooltipPosition="bottom">
-                    <clr-icon shape="baidu-recommend" size="16">
-                    </clr-icon>
-                </button>
-                
-                <button class="btn btn-primary" (click)="_drawStraight()" uTooltip="直线链接" title="直线链接"
-                        tooltipPosition="bottom">
+                    <clr-tooltip>
+                        <button class="btn btn-primary" (click)="_drawSearch()" clrTooltipTrigger >
+                        <clr-icon   shape="baidu-recommend" size="16">
+                        </clr-icon>
+                        </button>
+                        <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                            <span>百度地图推荐</span>
+                        </clr-tooltip-content>
+                    </clr-tooltip>
+
+                <clr-tooltip>
+                    
+                <button class="btn btn-primary" (click)="_drawStraight()" clrTooltipTrigger >
                     <clr-icon shape="straight-line"  size="16">
                     </clr-icon>
                 </button>
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>直线连接</span>
+                    </clr-tooltip-content>
+                </clr-tooltip>
 
-                <button class="btn btn-primary" (click)="_draw2Add()" uTooltip="新增轨迹点" tooltipPosition="bottom">
+                <clr-tooltip>
+                    
+                <button class="btn btn-primary" (click)="_draw2Add()" clrTooltipTrigger >
                     <clr-icon shape="addCircle" size="16">
                     </clr-icon>
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>新增轨迹点</span>
+                    </clr-tooltip-content>
                 </button>
+                </clr-tooltip>
+                
             </div>
+            
             <div class="applyOrCancel" [class.ui-hide]="state.editMode === -1">
-                <button class="btn btn-primary" (click)="_applyChange()" uTooltip="确定" tooltipPosition="bottom">
+                <clr-tooltip>
+                <button class="btn btn-primary" (click)="_applyChange()" clrTooltipTrigger >
                     <clr-icon shape="check-ok">
                     </clr-icon>
                 </button>
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>应用</span>
+                    </clr-tooltip-content>
+                </clr-tooltip>
                 
-                <button class="btn btn-primary" (click)="_applyCancel()" uTooltip="取消" tooltipPosition="bottom">
+                <button class="btn btn-primary" (click)="_applyCancel()" uTooltip="取消" tooltipPosition="bottom"  target="body">
                     <clr-icon shape="times">
                     </clr-icon>
                 </button>
@@ -304,14 +327,25 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         if (!this.map) {
             return;
         }
-        this.isLoading = true;
+
+        let needLoading = false;
+        if(s.markers.length > 500) {
+            needLoading = true;
+        }
+
+        if(needLoading) {
+            this.isLoading = true;
+        }
+
         redrawEditState.bind(this)(this.map, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s);
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s);
         redrawStops.bind(this)(this.map, this.previousMarkers, s);
-        setTimeout(() => {
-            this.isLoading = false
-        }, 20)
+        if (needLoading) {
+            setTimeout(() => {
+                this.isLoading = false
+            }, 20)
+        }
     }
 
     ngOnChanges(changes: { [propertyName: string]: SimpleChange }) {
@@ -452,7 +486,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
             contextmenu: undefined
         })
     }
-
     /**
      * save data
      */
@@ -466,6 +499,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     ngOnDestroy(): void {
         console.log('ngOnDestroy');
+        redrawDriveRoute.bind(this)(this.map, this.previousMarkers, this.state);
 
         // this.store.dispatch(this.action.setClear());
         if (this._subscription) {

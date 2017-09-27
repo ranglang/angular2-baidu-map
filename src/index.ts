@@ -9,11 +9,12 @@ import {EditRouteActions} from "./components/editRoute.actions";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {IfOpenDirective} from "u-clarity-angular/utils/conditional";
+import {IfOpenService} from "u-clarity-angular/utils/conditional/if-open.service";
 @NgModule({
     imports: [
-            // StoreModule.provideStore(rootReducer),
         CommonModule,
-       ClarityModule.forRoot(),
+        ClarityModule.forRoot(),
         ClrTooltipModule,
         ClrModalModule,
         BrowserAnimationsModule,
@@ -23,7 +24,9 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
         EditRoute,
     ],
     providers: [
+        IfOpenDirective,
         EditRouteActions,
+        IfOpenService,
     ],
     exports: [
         BaiduMap,

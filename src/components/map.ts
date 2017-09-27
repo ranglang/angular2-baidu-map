@@ -119,9 +119,16 @@ export class BaiduMap implements OnInit, OnChanges {
         if (changes['options'].isFirstChange() && !this.map) {
             return;
         }
-        let opts = changes['options'].currentValue;
+        let opts = changes['options'].currentValue as MapOptions;
 
-        this.isLoading = true;
+        let needLoading = false;
+        if(opts.markers.length > 500) {
+            needLoading = true;
+        }
+
+        if(needLoading) {
+            this.isLoading = true;
+        }
 
         console.log('ngOnChanges: ' + this.isLoading);
         //
@@ -140,9 +147,11 @@ export class BaiduMap implements OnInit, OnChanges {
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
         console.log('after reCreatePolygon: ' + format(new Date(), 'HH:mm:ss'));
 
+        if(needLoading) {
         setTimeout(() => {
-           this.isLoading = false;
+                this.isLoading = false;
         }, 10);
+        }
     }
 
     updatePolygonInfo(any) {

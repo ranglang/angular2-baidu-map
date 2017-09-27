@@ -357,7 +357,6 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
         console.log('has MarkerClusterer');
         markerClusterer = new markerLab.MarkerClusterer(map, {});
         markerClustererBig = true
-
     }else {
         if(markerLab && markerLab.MarkerClusterer ) {
             markerClusterer = new markerLab.MarkerClusterer(map, {});
