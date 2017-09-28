@@ -6,6 +6,24 @@ import {MapOptions} from "../interfaces/Options";
 @Injectable()
 
 export class EditRouteActions {
+    static UPDATE_SET_UN_START = '[ROUTE EDIT ]  UPDATE_SET_UN_START ';
+    public update_UPDATE_SET_UN_START (i: number): Action {
+        return {
+            type: EditRouteActions.UPDATE_SET_UN_START,
+            payload: i,
+        };
+    }
+
+
+    static UPDATE_SET_UN_END = '[ROUTE EDIT ]  UPDATE_SET_UN_END ';
+    public update_UPDATE_SET_UN_END (i: number): Action {
+        return {
+            type: EditRouteActions.UPDATE_SET_UN_END,
+            payload: i,
+        };
+    }
+
+
     static SET_START = '[ROUTE EDIT ] Set Start';
     public setStart(i: number): Action {
         return {
@@ -59,10 +77,31 @@ export class EditRouteActions {
         };
     }
 
+    static SET_ENABLE_ADD_MARKER_AFTER_DESTINATION = '[ROUTE EDIT ] SET ENABLE_ADD_MARKER_AFTER_DESTINATION ';
+    public setEnableAddMarkerAfterDestination(): Action {
+        return {
+            type: EditRouteActions.SET_ENABLE_ADD_MARKER_AFTER_DESTINATION,
+        };
+    }
     static SET_ENABLE_ADD_MARKER = '[ROUTE EDIT ] SET Add Marker';
     public setEnableAddMarker(): Action {
         return {
             type: EditRouteActions.SET_ENABLE_ADD_MARKER,
+        };
+    }
+
+
+    static SET_UPDATE_REMOVE_MARKER = '[ROUTE NEED ADD INITIAL ] REMOVE POINT ';
+    public removeMarker(): Action {
+        return {
+            type: EditRouteActions.SET_UPDATE_REMOVE_MARKER,
+        };
+    }
+
+    static SET_ENABLE_ADD_INITIAL = '[ROUTE NEED ADD INITIAL ] SET_ENABLE_ADD_INITIAL ';
+    public setInitailAddMarker(): Action {
+        return {
+            type: EditRouteActions.SET_ENABLE_ADD_INITIAL ,
         };
     }
 

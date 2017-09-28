@@ -2,7 +2,9 @@ import {
     Component, SimpleChange, Input, Output, EventEmitter, OnInit, OnChanges, ChangeDetectionStrategy, ElementRef,
     ContentChild, ViewChild
 } from '@angular/core';
-
+import {
+redrawStops
+} from "../RouteEditCoreOperations";
 import { MapOptions, OfflineOptions } from '../interfaces/Options';
 // import {PreviousAutoComplete, MarkerState} from '../interfaces/MarkerState';
 import { MapStatus } from '../enum/MapStatus';
@@ -122,6 +124,11 @@ export class BaiduMap implements OnInit, OnChanges {
         let opts = changes['options'].currentValue as MapOptions;
 
         let needLoading = false;
+
+        console.log(opts);
+
+        console.log('opts.markers:' + opts.markers.length);
+
         if(opts.markers.length > 500) {
             needLoading = true;
         }
@@ -129,9 +136,7 @@ export class BaiduMap implements OnInit, OnChanges {
         if(needLoading) {
             this.isLoading = true;
         }
-
         console.log('ngOnChanges: ' + this.isLoading);
-        //
         reCenter(this.map, opts);
         console.log('after reCenter: ' + format(new Date(), 'HH:mm:ss'));
         redrawMarkers.bind(this)(this.map, this.previousMarkers, opts);
@@ -145,7 +150,11 @@ export class BaiduMap implements OnInit, OnChanges {
         reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
         console.log('after reCheckEditPolygon: ' + format(new Date(), 'HH:mm:ss'));
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
+
+        reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
         console.log('after reCreatePolygon: ' + format(new Date(), 'HH:mm:ss'));
+
+        // redrawStops.bind(this)(this.map, this.previousPolygon, opts)
 
         if(needLoading) {
         setTimeout(() => {
@@ -158,6 +167,12 @@ export class BaiduMap implements OnInit, OnChanges {
         this.previousPolygon = any;
     }
 
+    public panTo(event, $event) {
+        var BMap: any = (<any>window)['BMap'];
+        this.map.panTo(new BMap.Point(event.lng, event.lat))
+        console.log(event);
+    }
+
     _draw() {
         console.log('draw');
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
@@ -166,13 +181,14 @@ export class BaiduMap implements OnInit, OnChanges {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-        reCenter(this.map, options);
+
         // reZoom(this.map, options);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, options);
         redrawPolyline.bind(this)(this.map, this.polyline, options)
         createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)
         reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, options)
+        reCenter(this.map, options);
     }
 }
 

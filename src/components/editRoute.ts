@@ -38,6 +38,14 @@ import {
 // import {StoneState} from "../app/ngrx";
 // import {StoneState} from "../app/ngrx";
 
+// export declare interface  ToasterService {
+//     pop(str: string, b: string, c: string);
+// }
+
+
+// export declare class ToasterService {
+//     pop(str: string, b: string, c: string);
+// }
 export interface EditRouteRxState {
     startIndex: number;
     endIndex: number;
@@ -153,17 +161,18 @@ export interface EditRouteRxState {
     template: `
 
         <div id="fixHandleBar" *ngIf="state">
-            <button class="btn btn-primary" (click)="save($event)">
+            <clr-tooltip>
+            <button class="btn btn-primary" (click)="save($event)" clrTooltipTrigger  [disabled]="state.editMode !== -1">
                 <clr-icon shape="sync">
                 </clr-icon>
             </button>
+                <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                    <span>提交并保存</span>
+                </clr-tooltip-content>
+            </clr-tooltip>
             
-            <!--[ngClass]="{'active': (hasMarkerStart$ | async) }" -->
-            <div class="startText lineInfo" [ngClass]="{'active': state.startIndex !== -1}">起点</div>
-            <!--[class.active]="hasMarkerStart$ |async"-->
-
+            <div class="startText lineInfo" [ngClass]="{'active': state.startIndex !== -1}" (click)="panToStart($event)">起点</div>
             <div id="leftStartCircle lineInfo" class="circle" [ngClass]="{'active': state.startIndex !== -1}"></div>
-            <!--[class.active]="hasLine$ | async" -->
             <div class="edit-line-status"
                  [class.active]=" state.endIndex !== -1 && state.startIndex !== -1"></div>
             
@@ -171,7 +180,32 @@ export interface EditRouteRxState {
                  [ngClass]="{'active': state.endIndex !== -1}"
             ></div>
 
-            <div class="startText lineInfo" [ngClass]="{'active': state.endIndex !== -1}" >终点</div>
+            <div class="startText lineInfo" [ngClass]="{'active': state.endIndex !== -1}"  (click)="panToEnd($event)">终点</div>
+
+
+            <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex === -1 && state.startIndex ===  -1 && state.markers.length ===0 )}">
+                <clr-tooltip>
+                    <button class="btn btn-primary" clrTooltipTrigger  (click)="_draw2AddInitial()">
+                        <clr-icon   shape="addCircle" size="16">
+                        </clr-icon>
+                    </button>
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>首次添加轨迹点</span>
+                    </clr-tooltip-content>
+                </clr-tooltip>
+            </div>
+            
+            <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex !== -1 && state.endIndex === (state.markers.length -1) && state.startIndex ===  -1)}">
+                <clr-tooltip>
+                    <button class="btn btn-primary" clrTooltipTrigger  (click)="_draw2AddAfterDes()">
+                        <clr-icon   shape="addCircle" size="16">
+                        </clr-icon>
+                    </button>
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>在终点后添加轨迹点</span>
+                    </clr-tooltip-content>
+                </clr-tooltip>
+            </div>
             
             <div class="lineEditArea" [ngClass]="{'ui-hide': state.startIndex === -1 || state.endIndex === -1 || state.editMode !== -1}">
                     <clr-tooltip>
@@ -183,7 +217,6 @@ export interface EditRouteRxState {
                             <span>百度地图推荐</span>
                         </clr-tooltip-content>
                     </clr-tooltip>
-
                 <clr-tooltip>
                     
                 <button class="btn btn-primary" (click)="_drawStraight()" clrTooltipTrigger >
@@ -196,14 +229,14 @@ export interface EditRouteRxState {
                 </clr-tooltip>
 
                 <clr-tooltip>
-                    
+
                 <button class="btn btn-primary" (click)="_draw2Add()" clrTooltipTrigger >
                     <clr-icon shape="addCircle" size="16">
                     </clr-icon>
+                </button>
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>新增轨迹点</span>
                     </clr-tooltip-content>
-                </button>
                 </clr-tooltip>
                 
             </div>
@@ -230,9 +263,7 @@ export interface EditRouteRxState {
         </div>
         <clr-modal [(clrModalOpen)]="isLoading" clrModalSize='sm'  [clrModalClosable]="false">
             <h3 class="modal-title"></h3>
-            <!--I have a nice title-->
             <div class="modal-body model-center">
-                <!--<p>But not much to say...</p>-->
                 <span class="spinner spinner-inline">
                 Loading...
             </span>
@@ -270,6 +301,31 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     polyline: any;
 
+    panToEnd(event) {
+        var BMap: any = (<any>window)['BMap'];
+        if(this.state.endIndex !== -1) {
+            let a = this.state.markers[this.state.endIndex]
+            this.map.panTo(new BMap.Point(a.longitude, a.latitude))
+        }
+
+        if(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+    panToStart(event) {
+        var BMap: any = (<any>window)['BMap'];
+        if(this.state.startIndex !== -1) {
+            let a = this.state.markers[this.state.startIndex]
+            this.map.panTo(new BMap.Point(a.longitude, a.latitude))
+        }
+
+        if(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    }
+
 
     // @Input('offline') offlineOpts: OfflineOptions;
 
@@ -279,9 +335,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     public state: EditRouteRxState;
     public map$: Observable<EditRouteRxState>;
-    // public hasMarkerStart$ : Observable<boolean>;
-    // public hasMarkerEnd$ : Observable<boolean>;
-    // public hasLine$ : Observable<boolean>;
 
     private _subscription : Subscription;
 
@@ -294,15 +347,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.map$ = this.store.select(res => {
             return res.routeEdit;
         });
-
-        // this.hasMarkerStart$ = this.store.select(res => res.routeEdit.startIndex !== -1 )
-        // this.hasMarkerEnd$ = this.store.select(res => res.routeEdit.endIndex !== -1 )
-        // this.hasLine$ = this.store.select(res => (res.routeEdit.endIndex !== -1  && res.routeEdit.startIndex !== -1))
-
     }
 
-
-    // @Input('panTo')
     public panTo(event, $event) {
         var BMap: any = (<any>window)['BMap'];
         this.map.panTo(new BMap.Point(event.lng, event.lat))
@@ -402,12 +448,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-
-        // let s = {...initialState, markers: thisoptions.markers, stops: this.options.stops}
-        // console.log('initial state');
-        // console.log(this.state);
-        // this._redrawState(this.state);
-        // this.store.dispatch(this.action.getSetMapOption(options))
     }
 
     _drawSearch() {
@@ -428,11 +468,30 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     _applyChange() {
         this.store.dispatch(this.action.applyChange(this.previousMarkers.currentPoints));
+        // console.log(this.previousMarkers.currentPoints.length);
     }
 
     _setEnd(point: any) {
         let i = this.previousMarkers.markers.findIndex(res => res.marker.getPosition() === point);
         this.store.dispatch(this.action.setEnd(i));
+    }
+
+    _removeEnd(point: any) {
+        this.previousMarkers.currentPoints =[];
+        let i = this.previousMarkers.markers.find(res => res.marker.getPosition() === point);
+        console.log(i);
+        this.addToCurrentPoints(i.marker);
+        this.store.dispatch(
+            this.action.removeMarker()
+        )
+    }
+
+    _setUnStart() {
+        this.store.dispatch(this.action.update_UPDATE_SET_UN_START(-1));
+    }
+
+    _setUnEnd() {
+        this.store.dispatch(this.action.update_UPDATE_SET_UN_END(-1));
     }
 
     _setStart(point: any) {
@@ -445,6 +504,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.previousMarkers = {...this.previousMarkers, markers: markers}
     }
 
+    // setEnableAddMarkerAfterDestination
+
     addMarkerListener(a: any) {
         // this.previousMarkers = {...this.previousMarkers, markers: a}
         this.previousMarkers.mapListener = a;
@@ -455,7 +516,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
 
     _getPolyLine(): PolyLineSate[] {
-        // this.previousMarkers = {...this.previousMarkers, polyLine: [{polyLine: a, listeners: []}]}
         return this.previousMarkers.polyLine ? this.previousMarkers.polyLine : [];
     }
 
@@ -479,6 +539,14 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.store.dispatch(this.action.setEnableAddMarker());
     }
 
+    _draw2AddInitial() {
+        this.store.dispatch(this.action.setInitailAddMarker());
+    }
+
+    _draw2AddAfterDes() {
+        this.store.dispatch(this.action.setEnableAddMarkerAfterDestination());
+    }
+
     addToCurrentPoints(marker) {
         this.previousMarkers.currentPoints.push({
             marker: marker,
@@ -500,7 +568,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     ngOnDestroy(): void {
         console.log('ngOnDestroy');
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, this.state);
-
         // this.store.dispatch(this.action.setClear());
         if (this._subscription) {
             this._subscription.unsubscribe();

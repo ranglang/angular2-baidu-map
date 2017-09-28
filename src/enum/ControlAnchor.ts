@@ -16,6 +16,10 @@ export enum RouteEditMode {
     SELECT_MODE = -1,
     DRIVIVE_ROUTE = 1,
     SET_STRAIGHT = 2,
-    SET_AND_MARKER = 3
+    SET_AND_MARKER = 3,
+    SET_ADD_MARKER_AFTER_DES =4,
+    SET_ADD_INITIAL_MARKER = 5,
+
+    SET_EDIT_REMOVE = 6,
 
 }

@@ -353,7 +353,6 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
 
     let markerClustererBig = false;
     if(markerLab && markerLab.MarkerClusterer && opts.markers.length > 300) {
-        // markerClusterer = new markerLab.MarkerClusterer(map, {});
         console.log('has MarkerClusterer');
         markerClusterer = new markerLab.MarkerClusterer(map, {});
         markerClustererBig = true
@@ -384,9 +383,8 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
         return;
     }
 
-    opts.markers.forEach(function(marker: MarkerOptions) {
+    opts.markers.forEach(function(marker: MarkerOptions, index : number) {
         var marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-        // TODO
         if(markerClustererBig ) {
             markerClusterer.addMarker(marker2);
         }else {
@@ -419,7 +417,6 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
             marker2.openInfoWindow(infoWindow2);
         }
         let openInfoWindowListener = function() {
-            // console.log('openInfoWindowListener ');
             this.openInfoWindow(infoWindow2);
         };
         previousMarker.listeners.push(openInfoWindowListener);
