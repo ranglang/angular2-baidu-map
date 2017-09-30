@@ -28,31 +28,23 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
 
     win['baidumapinit'] = function() {
         win['baiduMap'].status = MapStatus.LOADED;
-        console.log('lllllllllllllllllllllllllllllll');
 
         // let baiduMap: MapObjct = win['baiduMap'];
         var BMapLib: any = (<any>window)['BMapLib'];
-        // console.log('BMapLib');
-        // console.log(BMapLib);
 
         if(!BMapLib || !BMapLib.DrawingManager) {
-            console.log('loading drawing2')
             createTag1();
         }
 
         if(!BMapLib || !BMapLib.DrawingManager) {
-            console.log('loading drawing1')
             createTagDrawingManager();
         }
 
         if(!BMapLib || !BMapLib.TextIconOverlay) {
-            console.log('loading drawing1')
             createTag2();
         }
-            // console.log(' skip loadding drawing');
         // }
 
-            // console.log(' skip loadding drawing');
         // }
 
 
@@ -64,7 +56,6 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
         // }
         //
 
-        console.log('callback');
         callback();
         win['baiduMap'].callbacks.forEach((cb: Function) => cb());
         win['baiduMap'].callbacks = [];
@@ -76,7 +67,6 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
         script.type = 'text/javascript';
         script.src = DrawingManager_MAP_URL;
         script.onerror = function() {
-            console.log('onerror');
             // Array.prototype
             //     .slice
             //     .call(document.querySelectorAll('baidu-map div'))
@@ -94,7 +84,6 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
         script.type = 'text/javascript';
         script.src = textIconURL;
         script.onerror = function() {
-            console.log('onerror ');
             // Array.prototype
             //     .slice
             //     .call(document.querySelectorAll('baidu-map div'))
@@ -111,7 +100,6 @@ export const loader = function(ak: string, offlineOpts: OfflineOptions, callback
         script.type = 'text/javascript';
         script.src = markerClustererURL;
         script.onerror = function() {
-            console.log('onerror ');
             // Array.prototype
             //     .slice
             //     .call(document.querySelectorAll('baidu-map div'))

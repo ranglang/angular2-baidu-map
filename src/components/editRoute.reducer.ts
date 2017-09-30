@@ -36,9 +36,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
 
 
-    // console.log('editRouteReducer');
-    // console.log(action);
-    // console.log(state);
     switch (action.type) {
         case EditRouteActions.SET_CLEAR: {
             return {...state, markers: [], startIndex: -1, endIndex: -1, polyLine: [], enableSearch: false}
@@ -46,8 +43,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
         case EditRouteActions.SET_OPTIONS: {
             let mapOpts = action.payload as MapOptions;
-            console.log('reducer');
-            console.log(mapOpts);
             let a =  {...state,
                 markers: mapOpts.markers,
                 startIndex: -1,
@@ -61,12 +56,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             let routePointList = action.payload;
 
 
-            console.log(routePointList);
-            // routePointList.map(res => ({
-            //           longitude: res.lng,
-            //           latitude: res.lat,
-            //           category: MarkerIcon.ROUTE
-            //         })),
             let a = {...state,
                 markers: routePointList.map(res => ({
                           longitude: res.lng,
@@ -83,6 +72,12 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
         case EditRouteActions.SET_UPDATE_REMOVE_MARKER : {
             return {...state, editMode: RouteEditMode.SET_EDIT_REMOVE};
+        }
+
+        case EditRouteActions.SET_UPDATE_REMOVE_MARKER_IN_LINE: {
+            return {...state, editMode: RouteEditMode.SET_EDIT_REMOVE,
+                endIndex: state.endIndex - 1
+            };
         }
 
         case EditRouteActions.SET_STRAIGHT: {
@@ -245,11 +240,8 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                     let s = action.payload as MarkerSate[]
                     let pos = s.map((res) => res.marker.getPosition())
 
-                    console.log(pos);
                     let newS = state.markers.filter((res) => {
                         let a = pos.findIndex(p => p.equals(new BMap.Point(res.longitude, res.latitude)));
-                        console.log(new BMap.Point(res.longitude, res.latitude) );
-                        console.log(a);
                        return  a === -1
                     });
 
@@ -299,7 +291,11 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                 case RouteEditMode.SET_ADD_INITIAL_MARKER: {
                     return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, enableMarkerClick: false};
                 }
+                case RouteEditMode.SET_EDIT_REMOVE: {
+                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, enableMarkerClick: false};
+                }
                 default: {
+                    // console.log(state.editMode);
                     return state;
                 }
             }

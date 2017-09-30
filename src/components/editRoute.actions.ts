@@ -90,6 +90,12 @@ export class EditRouteActions {
         };
     }
 
+    static SET_UPDATE_REMOVE_MARKER_IN_LINE = '[ROUTE NEED ADD INITIAL ] REMOVE POINT IN LINE';
+    public removeMarkerInLine(): Action {
+        return {
+            type: EditRouteActions.SET_UPDATE_REMOVE_MARKER_IN_LINE,
+        };
+    }
 
     static SET_UPDATE_REMOVE_MARKER = '[ROUTE NEED ADD INITIAL ] REMOVE POINT ';
     public removeMarker(): Action {

@@ -85,7 +85,6 @@ export const redrawPolyLinEdit = function (map: any, previousPolyLine: PreviousE
             map.addOverlay(polylines);
 
         }else {
-            console.log('markerHandler.startMarker && markerHandler.endMarker should be all settled');
         }
     }else {
     }
@@ -315,7 +314,6 @@ export const redrawStops= function (map: any, previousMarkers: PreviousStateMark
                 marker2.openInfoWindow(infoWindow2);
             }
             let openInfoWindowListener = function() {
-                // console.log('openInfoWindowListener ');
                 this.openInfoWindow(infoWindow2);
             };
             previousMarker.listeners.push(openInfoWindowListener);
@@ -326,31 +324,31 @@ export const redrawStops= function (map: any, previousMarkers: PreviousStateMark
 }
 
 
-export const clearMarker = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
+export const clearMarker = function (map: any, markerClusterer: any,  previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     let route = this;
     var BMap: any = (<any>window)['BMap'];
     if (!BMap || !map) {
         return;
     }
 
-    var markerLab : any = (<any>window)['BMapLib']
+    // var markerLab : any = (<any>window)['BMapLib']
 
-    let markerClusterer;
-    if(markerLab && markerLab.MarkerClusterer) {
-        markerClusterer = new markerLab.MarkerClusterer(map, {});
-    }
-
+    // let markerClusterer;
+    // if(markerLab && markerLab.MarkerClusterer) {
+    //     markerClusterer = new markerLab.MarkerClusterer(map, {});
+    // }
 
     previousMarkers.markers.forEach(markerState => {
         if(markerState.contextmenu) {
             markerState.marker.removeContextMenu(markerState.contextmenu);
         }
         map.removeOverlay(markerState.marker);
+
         markerClusterer.removeMarker(markerState.marker)
     });
 }
 
-export const redrawEditState = function (map: any, previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
+export const redrawEditState = function (map: any,  markerClusterer: any,  previousMarkers: PreviousStateMarker, state: EditRouteRxState) {
     let route = this;
     var BMap: any = (<any>window)['BMap'];
     if (!BMap || !map) {
@@ -358,37 +356,33 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
     }
 
     var markerLab : any = (<any>window)['BMapLib']
-    var markerClusterer;
+    // var markerClusterer;
 
     var markerClustererBig = false;
 
-    if(markerLab && markerLab.MarkerClusterer && state.markers.length > 300) {
-        markerClustererBig = true;
-        markerClusterer = new markerLab.MarkerClusterer(map, {});
-        console.log('has MarkerClusterer');
-    }else {
-        console.log('MarkerClusterer < 300');
-        if(markerLab && markerLab.MarkerClusterer ) {
-            markerClusterer = new markerLab.MarkerClusterer(map, {});
-        }else {
-            console.log('no MarkserCluster');
-        }
+    if(state.markers.length> 300) {
+      markerClustererBig = true;
     }
+    // if(markerLab && markerLab.MarkerClusterer && state.markers.length > 300) {
+    //     markerClusterer = new markerLab.MarkerClusterer(map, {});
+    // }else {
+    //     if(markerLab && markerLab.MarkerClusterer ) {
+    //         markerClusterer = new markerLab.MarkerClusterer(map, {});
+    //     }else {
+    //     }
+    // }
 
 
     // prviousMarksers
     if (previousMarkers) {
             var preMarkerClusterer = markerLab && markerLab.MarkerClusterer && previousMarkers.markers.length > 300
             previousMarkers.markers.forEach(markerState => {
-                console.log('markerState.contextmenu');
                 if(markerState.contextmenu) {
                     markerState.marker.removeContextMenu(markerState.contextmenu);
                 }
                 if (preMarkerClusterer) {
-                    console.log('preMarkerClusterer');
                     markerClusterer.removeMarker(markerState.marker)
                 } else {
-                    console.log('preMarkerClusterer');
                     map.removeOverlay(markerState.marker)
                 }
             });
@@ -434,41 +428,40 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
     let trace_point_icon = new BMap.Icon('/assets/img/click_mark.png', new BMap.Size(20, 20), {imageOffset: new BMap.Size(0, 0)});
 
 
+    /**
+     * onMenuItemRemovePointListener
+     */
     let onMenuItemRemovePointListener = function () {
-        // console.log('setUnStartMarkder');
-        // route._setUnStart();
-        // route._setStart(this.getPosition());
-
         let marker = new BMap.Marker(this.getPosition(), {icon: trace_point_icon});
         route.addToCurrentPoints(marker);
-
-        // let a = this.getPosition();
+        // console.log('markerClusterer.removeMarker');
+        markerClusterer.removeMarker(marker);
+        // console.log('map.removeremoveOverlay');
         map.removeOverlay(this);
-
-        // let i = this.previousMarkers.markers.find(res => res.marker.getPosition() === point);
-        // let marker = new BMap.Marker(event.point, {icon: trace_point_icon});
-        // map.addOverlay(marker);
-        // route.addToCurrentPoints(marker);
     }
 
     let onMenuItemSetUnStartListener = function () {
-        console.log('setUnStartMarkder');
         route._setUnStart();
     }
 
     let onMenuItemSetStartListener = function () {
-        console.log('setStartMarkder');
         route._setStart(this.getPosition());
     }
 
     let onMenuItemUnSetDestinationListener = function () {
-        console.log('unSetStartEnd');
         route._setUnEnd();
     }
 
     let onMenuItemSetDestinationListener = function () {
-        console.log('setStartEnd');
         route._setEnd(this.getPosition());
+    }
+
+    let onMenuItemRemoveListener = function () {
+        // route._removeEnd(this.getPosition());
+    }
+
+    let onMenuItemRemoveInLineDestinationListener = function () {
+        route._removeEnd1(this.getPosition());
     }
 
     let onMenuItemRemoveDestinationListener = function () {
@@ -536,16 +529,10 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
                 break;
             }
             case RouteEditMode.SET_EDIT_REMOVE: {
-
-                console.log('previousMarkers.currentPoints');
-                console.log(previousMarkers.currentPoints);
                 let a = previousMarkers.currentPoints[0]
-                console.log(a.marker.getPosition());
                 state.markers.forEach(function (marker: MarkerOptions, index) {
-                    let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
-
-                    let cxm;
-                    console.log( (marker2.getPosition().equals(a.marker.getPosition())));
+                let marker2 = createMarker(marker, new BMap.Point(marker.longitude, marker.latitude));
+               let cxm;
                             if (!marker2.getPosition().equals(a.marker.getPosition())) {
                                 cxm = new BMap.ContextMenu();
                                 let remove = new BMap.MenuItem('删除该点', onMenuItemRemovePointListener.bind(marker2));
@@ -571,6 +558,10 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
                             marker2.setIcon(start_marker_icon);
                             cxm = new BMap.ContextMenu();
                             let item_un_start = new BMap.MenuItem('取消设为起点', onMenuItemSetUnStartListener.bind(marker2));
+
+                            let remove = new BMap.MenuItem('删除该点', onMenuItemRemovePointListener.bind(marker2));
+                            cxm.addItem(remove);
+
                             cxm.addItem(item_un_start);
                             marker2.addContextMenu(cxm);
 
@@ -578,6 +569,10 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
                             marker2.setIcon(destination_marker_icon);
                             cxm = new BMap.ContextMenu();
                             let item_un_end = new BMap.MenuItem('取消设为终点', onMenuItemUnSetDestinationListener.bind(marker2));
+
+
+                            let remove = new BMap.MenuItem('删除该点', onMenuItemRemovePointListener.bind(marker2));
+                            cxm.addItem(remove);
                             cxm.addItem(item_un_end);
                             marker2.addContextMenu(cxm);
 
@@ -588,7 +583,8 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
                             if (index === count) {
                                 marker2.setIcon(route_end_icon)
                                 let item_start = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
-                                let item_remove_end = new BMap.MenuItem('删除该/点',onMenuItemRemoveDestinationListener.bind(marker2));
+                                let item_remove_end = new BMap.MenuItem('删除该点',onMenuItemRemoveInLineDestinationListener.bind(marker2));
+
                                 cxm.addItem(item_start);
                                 cxm.addItem(item_remove_end);
 
@@ -598,12 +594,17 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
                                 cxm.addItem(item_destination);
 
                             } else {
-                                marker2.setIcon(trace_point_icon)
+                                marker2.setIcon(trace_point_icon);
                                 let item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
                                 let item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
                                 cxm.addItem(item_start);
                                 cxm.addItem(item_destination);
+                                if( state.startIndex && state.endIndex &&  state.startIndex < index && index < state.endIndex) {
+                                    let item_remove_end = new BMap.MenuItem('删除该点',onMenuItemRemoveInLineDestinationListener.bind(marker2));
+                                    cxm.addItem(item_remove_end)
+                                }
                             }
+
 
                             marker2.addContextMenu(cxm);
                         }
@@ -629,21 +630,11 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
     }
 
      function rightClick(e) {
-        console.log('rightClick');
         let s = e.point.lng;
         let w = e.point.lat;
 
         if (e.overlay) {
-            console.log('覆盖福');
-            console.log(s);
-            console.log(w);
-
-            console.log(e.overlay)
             let marker2 = e.overlay;
-
-            // map.addEventListener('contextmenu', function(e) {
-            //     console.log('contextmenu');
-            // });
 
             let cxm = new BMap.ContextMenu();
             let item_start = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
@@ -664,7 +655,6 @@ export const redrawEditState = function (map: any, previousMarkers: PreviousStat
             // e.preventDefault();
             // e.stopPropagation();
         } else {
-            console.log('非覆盖物');
         }
     }
 

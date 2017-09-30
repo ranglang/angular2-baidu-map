@@ -39,15 +39,22 @@ import {MarkerSate, PreviousAutoComplete} from "../interfaces/PreviousMarker";
         .offlineLabel{
             font-size: 30px;
         }
-        .mapView {
-            width: calc(100vw - 880px);
-            height: 80vh;
-        }
         
         .model-center {
             display: flex;
             justify-content: center;
         }
+        
+        .mapView {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stopSelectStyle {
+            width: calc(100vw - 1180px);
+            height: 484px;
+        }
+
         
     `],
     template: `
@@ -84,6 +91,10 @@ export class BaiduMap implements OnInit, OnChanges {
     @Input() protocol: string;
     @Input() options: MapOptions;
     @Input('offline') offlineOpts: OfflineOptions;
+
+    @Input('styleClass') styleClass = 'mapView';
+
+
     @Output() onMapLoaded = new EventEmitter();
     @Output() onMarkerClicked = new EventEmitter();
     @Output() onMarkerDragged = new EventEmitter();
@@ -124,11 +135,6 @@ export class BaiduMap implements OnInit, OnChanges {
         let opts = changes['options'].currentValue as MapOptions;
 
         let needLoading = false;
-
-        console.log(opts);
-
-        console.log('opts.markers:' + opts.markers.length);
-
         if(opts.markers.length > 500) {
             needLoading = true;
         }
@@ -136,23 +142,19 @@ export class BaiduMap implements OnInit, OnChanges {
         if(needLoading) {
             this.isLoading = true;
         }
-        console.log('ngOnChanges: ' + this.isLoading);
+
+        console.log('changed');
+        console.log( opts);
         reCenter(this.map, opts);
-        console.log('after reCenter: ' + format(new Date(), 'HH:mm:ss'));
         redrawMarkers.bind(this)(this.map, this.previousMarkers, opts);
 
-        console.log('after redrawMarkers: ' + format(new Date(), 'HH:mm:ss'));
         redrawPolyline.bind(this)(this.map, this.polyline, opts)
 
-        console.log('after redrawPolyline: ' + format(new Date(), 'HH:mm:ss'));
         createAutoComplete.bind(this)(this.map, this.previousAutoComplete, opts)
-        console.log('after createAutoComplete: ' + format(new Date(), 'HH:mm:ss'));
         reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, opts)
-        console.log('after reCheckEditPolygon: ' + format(new Date(), 'HH:mm:ss'));
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
 
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
-        console.log('after reCreatePolygon: ' + format(new Date(), 'HH:mm:ss'));
 
         // redrawStops.bind(this)(this.map, this.previousPolygon, opts)
 
@@ -170,19 +172,18 @@ export class BaiduMap implements OnInit, OnChanges {
     public panTo(event, $event) {
         var BMap: any = (<any>window)['BMap'];
         this.map.panTo(new BMap.Point(event.lng, event.lat))
-        console.log(event);
     }
 
     _draw() {
-        console.log('draw');
         let options: MapOptions = Object.assign({}, defaultOpts, this.options);
         this.map = createInstance(options, this.mapView.nativeElement);
         this.map.addEventListener('click', e => {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-
-        // reZoom(this.map, options);
+        console.log('draw');
+        console.log(options);
+        reCenter(this.map, options);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, options);
         redrawPolyline.bind(this)(this.map, this.polyline, options)
         createAutoComplete.bind(this)(this.map, this.previousAutoComplete, options)

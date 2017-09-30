@@ -10,6 +10,9 @@ export enum MarkerIcon {
     ROUTE = 1,
     OVERSPEED = 2,
     RETUREN = 3,
+    SELECTED_STOP = 4,
+    ROUTE_START = 5,
+    ROUTE_END = 6
 }
 
 export enum RouteEditMode {

@@ -45,6 +45,26 @@ export const createInstance1 = function(opts: MapOptions, element: any) {
     setGeoCtrl(map, opts);
     return map;
 };
+
+
+export const createInstanceMarkerClusterer = function(map: any) {
+    // var BMap: any = (<any>window)['BMap'];
+    // create map instance
+    // var map = new BMap.Map(element);
+
+    var markerLab : any = (<any>window)['BMapLib']
+
+    let markerClusterer;
+    if(markerLab && markerLab.MarkerClusterer) {
+        console.log('markerClusterer  exist');
+        markerClusterer = new markerLab.MarkerClusterer(map, {});
+    }else {
+        console.log('markerClusterer  no')
+    }
+
+    return markerClusterer;
+}
+
 export const createInstance = function(opts: MapOptions, element: any) {
     var BMap: any = (<any>window)['BMap'];
     // create map instance
@@ -177,13 +197,11 @@ export const createAutoComplete = function (
 
 
     if (opts.enableAutoComplete) {
-        // console.log('opts.enableAutoComplete');
         let ac = new BMap.Autocomplete(
             {
                 'input': G('suggestId'),
                 'location': map,
             });
-        // console.log(G('suggestId'));
 
         let listner = ac.addEventListener('onhighlight', function (e) {
             let str = '';
@@ -229,7 +247,6 @@ export const createAutoComplete = function (
         previousAutoComplete.listeners.push(listner);
         previousAutoComplete.listeners.push(listner2);
     } else {
-        // console.log('not enable AutoComplete');
     }
 };
 
@@ -272,11 +289,20 @@ export const createMarker = function(marker: MarkerOptions, pt: any) {
     var opts: any = {};
 
     if (marker.indexNumber) {
-        let icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
-            offset: new BMap.Size(10, 28),
-            imageOffset: new BMap.Size(0, 0 - (marker.indexNumber )* 28)
-        });
-        opts['icon'] = icon;
+        if(marker.category === MarkerIcon.SELECTED_STOP) {
+            let icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
+                offset: new BMap.Size(10, 28),
+                imageOffset: new BMap.Size(-20, 0 - (marker.indexNumber )* 28)
+            });
+            opts['icon'] = icon;
+        }else {
+            let icon = new BMap.Icon('/assets/img/ditu.png', new BMap.Size(20, 28), {
+                offset: new BMap.Size(10, 28),
+                imageOffset: new BMap.Size(0, 0 - (marker.indexNumber )* 28)
+            });
+            opts['icon'] = icon;
+        }
+
     }else if(marker.category) {
         switch(marker.category) {
             case MarkerIcon.STOP : {
@@ -344,7 +370,6 @@ export const redrawPolyline = function (map: any, polyline: any, opts: MapOption
 }
 
 export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], opts: MapOptions) {
-    console.log('redrawMarkers ');
     var BMap: any = (<any>window)['BMap'];
     var self = this;
 
@@ -353,14 +378,12 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
 
     let markerClustererBig = false;
     if(markerLab && markerLab.MarkerClusterer && opts.markers.length > 300) {
-        console.log('has MarkerClusterer');
         markerClusterer = new markerLab.MarkerClusterer(map, {});
         markerClustererBig = true
     }else {
         if(markerLab && markerLab.MarkerClusterer ) {
             markerClusterer = new markerLab.MarkerClusterer(map, {});
         }
-        console.log('no MarkerClusterer');
     }
 
     let preMarkerClusterer   = markerLab && markerLab.MarkerClusterer && previousMarkers.length > 300
