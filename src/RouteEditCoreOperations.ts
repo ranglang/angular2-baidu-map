@@ -151,6 +151,7 @@ function drawCurrentPoint3(map: any,previousMarkers: PreviousStateMarker, route)
     map.addOverlay(polylines);
     route._updatePolyLine(polylines)
 }
+
 function drawCurrentPoint2(endOption: MarkerOptions, map: any,previousMarkers: PreviousStateMarker, route) {
     var BMap: any = (<any>window)['BMap'];
     route._getPolyLine().forEach((res) => {
@@ -159,6 +160,28 @@ function drawCurrentPoint2(endOption: MarkerOptions, map: any,previousMarkers: P
     let a = previousMarkers.currentPoints.map(res => {return res.marker.getPosition()})
     let eP = new BMap.Point(endOption.longitude, endOption.latitude);
     let b = [eP].concat(a);
+    let polylines = new BMap.Polyline(
+        b,
+        {
+            strokeColor: 'red',
+            strokeWeight: 3,
+            strokeOpacity: 0.5
+        }
+    );
+
+    map.addOverlay(polylines);
+    route._updatePolyLine(polylines)
+}
+
+function drawCurrentPoint4(startOption: MarkerOptions, map: any,previousMarkers: PreviousStateMarker, route) {
+    var BMap: any = (<any>window)['BMap'];
+    route._getPolyLine().forEach((res) => {
+        map.removeOverlay(res.polyLine);
+    });
+    let a = previousMarkers.currentPoints.map(res => {return res.marker.getPosition()})
+    let eP = new BMap.Point(startOption.longitude, startOption.latitude);
+    // let b = [eP].concat(a);
+    let b = ([a]).concat(eP);
     let polylines = new BMap.Polyline(
         b,
         {
@@ -672,6 +695,13 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
         drawCurrentPoint2(state.markers[state.endIndex], map, route.previousMarkers, route);
     }
 
+    function markClickAddBeforeStart( event ) {
+        let marker = new BMap.Marker(event.point, {icon: trace_point_icon});
+        map.addOverlay(marker);
+        route.addToCurrentPoints(marker);
+        drawCurrentPoint4(state.markers[state.startIndex], map, route.previousMarkers, route);
+    }
+
     function markInitialClickAdd( event ) {
         let marker = new BMap.Marker(event.point, {icon: trace_point_icon});
         map.addOverlay(marker);
@@ -685,6 +715,10 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
         if(state.editMode === RouteEditMode.SET_ADD_MARKER_AFTER_DES ) {
             map.addEventListener('click', markClickAddDestination);
             route.addMarkerListener(markClickAddDestination);
+
+        } else if(state.editMode === RouteEditMode.SET_ADD_MARKER_BEFORE_START) {
+            map.addEventListener('click', markClickAddBeforeStart);
+            route.addMarkerListener(markClickAddBeforeStart);
         } else if(state.editMode === RouteEditMode.SET_ADD_INITIAL_MARKER) {
             map.addEventListener('click', markInitialClickAdd);
             route.addMarkerListener(markInitialClickAdd);

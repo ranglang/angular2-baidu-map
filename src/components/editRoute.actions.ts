@@ -77,6 +77,13 @@ export class EditRouteActions {
         };
     }
 
+    static SET_ENABLE_ADD_MARKER_BEFORE_START = '[ROUTE EDIT ] SET BEFORE START ';
+    public setEnableAddMarkerBeforeStart(): Action {
+        return {
+            type: EditRouteActions.SET_ENABLE_ADD_MARKER_BEFORE_START,
+        };
+    }
+
     static SET_ENABLE_ADD_MARKER_AFTER_DESTINATION = '[ROUTE EDIT ] SET ENABLE_ADD_MARKER_AFTER_DESTINATION ';
     public setEnableAddMarkerAfterDestination(): Action {
         return {

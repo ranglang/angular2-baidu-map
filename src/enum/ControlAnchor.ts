@@ -24,5 +24,5 @@ export enum RouteEditMode {
     SET_ADD_INITIAL_MARKER = 5,
 
     SET_EDIT_REMOVE = 6,
-
+    SET_ADD_MARKER_BEFORE_START =7,
 }

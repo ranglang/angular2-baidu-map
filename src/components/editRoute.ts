@@ -72,8 +72,6 @@ export interface EditRouteRxState {
             display: flex;
             left: 4em;
             top: 20px;
-            /*padding-left: 2.5em;*/
-            /*padding-right: 2.5em;*/
             padding-left: 20px;
             padding-right: 20px;
             padding-top: 1.5625em;
@@ -201,24 +199,30 @@ export interface EditRouteRxState {
 
             <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex === -1 && state.startIndex ===  -1 && state.markers.length ===0 )}">
                 <clr-tooltip>
-                    <button class="btn btn-primary" clrTooltipTrigger  (click)="_draw2AddInitial()">
-                        <clr-icon   shape="addCircle" size="16">
+                        <clr-icon   shape="addCircle" size="18" clrTooltipTrigger  (click)="_draw2AddInitial()" >
                         </clr-icon>
-                    </button>
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>首次添加轨迹点</span>
+                    </clr-tooltip-content>
+                </clr-tooltip>
+            </div>
+
+            <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.startIndex !== -1 && state.startIndex === 0 ) && state.endIndex == -1}">
+                <clr-tooltip>
+                    <clr-icon   shape="addCircle" size="18" clrTooltipTrigger  (click)="_draw2BeforeStart()">
+                    </clr-icon>
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>在起始点前方添加轨迹点</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
             </div>
             
             <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex !== -1 && state.endIndex === (state.markers.length -1) && state.startIndex ===  -1)}">
                 <clr-tooltip>
-                    <button class="btn btn-primary" clrTooltipTrigger  (click)="_draw2AddAfterDes()">
-                        <clr-icon   shape="addCircle" size="16">
+                        <clr-icon   shape="addCircle" size="18" clrTooltipTrigger  (click)="_draw2AddAfterDes()">
                         </clr-icon>
-                    </button>
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
-                        <span>在终点后添加轨迹点</span>
+                        <span>追加轨迹点</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
             </div>
@@ -343,10 +347,17 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     panToEnd(event) {
         var BMap: any = (<any>window)['BMap'];
+
+        let index = this.state.markers.length - 1;
+
         if(this.state.endIndex !== -1) {
-            let a = this.state.markers[this.state.endIndex]
-            this.map.panTo(new BMap.Point(a.longitude, a.latitude))
+            index = this.state.endIndex;
         }
+
+        let a = this.state.markers[index]
+
+        this.map.setZoom(18);
+        this.map.panTo(new BMap.Point(a.longitude, a.latitude));
 
         if(event) {
             event.preventDefault();
@@ -355,10 +366,20 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
     panToStart(event) {
         var BMap: any = (<any>window)['BMap'];
+        let  a = 0;
         if(this.state.startIndex !== -1) {
-            let a = this.state.markers[this.state.startIndex]
-            this.map.panTo(new BMap.Point(a.longitude, a.latitude))
+            a = this.state.startIndex;
         }
+            // let a = this.state.markers[this.state.startIndex]
+            // this.map.panTo(new BMap.Point(a.longitude, a.latitude))
+        // }else {
+        //     let a = this.state.markers[this.state.startIndex]
+        //     this.map.panTo(new BMap.Point(a.longitude, a.latitude))
+        // }
+
+                let marker = this.state.markers[a]
+        this.map.setZoom(18);
+                this.map.panTo(new BMap.Point(marker.longitude, marker.latitude));
 
         if(event) {
             event.preventDefault();
@@ -611,6 +632,11 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     _draw2AddAfterDes() {
         this.store.dispatch(this.action.setEnableAddMarkerAfterDestination());
+    }
+
+    _draw2BeforeStart() {
+        this.store.dispatch(this.action.setEnableAddMarkerBeforeStart());
+        // this.store.dispatch(this.action.setEnableAddMarkerAfterDestination());
     }
 
     addToCurrentPoints(marker) {

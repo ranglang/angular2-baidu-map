@@ -155,8 +155,13 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
             return {...state, enableMarkerClick: true, editMode: RouteEditMode.SET_AND_MARKER};
         }
 
+
         case EditRouteActions.SET_ENABLE_ADD_MARKER_AFTER_DESTINATION : {
             return {...state, enableMarkerClick: true, editMode: RouteEditMode.SET_ADD_MARKER_AFTER_DES};
+        }
+
+        case EditRouteActions.SET_ENABLE_ADD_MARKER_BEFORE_START : {
+            return {...state, enableMarkerClick: true, editMode: RouteEditMode.SET_ADD_MARKER_BEFORE_START};
         }
 
         case EditRouteActions.SET_ENABLE_ADD_INITIAL : {
@@ -184,6 +189,26 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                         markers: c,
                         endIndex:  - 1
                         // state.endIndex + c.length
+                    }
+                }
+                case RouteEditMode.SET_ADD_MARKER_BEFORE_START: {
+                    let s = action.payload as MarkerSate[]
+                    let c = s.map(item => {
+                        return {
+                            longitude: item.marker.getPosition().lng,
+                            latitude: item.marker.getPosition().lat,
+                            category: MarkerIcon.ROUTE
+                        }
+                    });
+
+                    let r = c.concat(state.markers as any);
+
+                    return {...state,
+                        enableMarkerClick: false,
+                        editMode: RouteEditMode.SELECT_MODE,
+                        markers: r,
+                        // endIndex: state.endIndex + c.length
+                        startIndex: 0
                     }
                 }
                 case RouteEditMode.SET_ADD_MARKER_AFTER_DES: {
@@ -286,6 +311,9 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                     return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE};
                 }
                 case RouteEditMode.SET_ADD_MARKER_AFTER_DES: {
+                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, enableMarkerClick: false};
+                }
+                case RouteEditMode.SET_ADD_MARKER_BEFORE_START: {
                     return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, enableMarkerClick: false};
                 }
                 case RouteEditMode.SET_ADD_INITIAL_MARKER: {
