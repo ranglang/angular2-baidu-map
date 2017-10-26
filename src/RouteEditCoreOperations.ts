@@ -1,20 +1,8 @@
 import {MapOptions, MarkerOptions} from './interfaces/Options';
-// import {
-//     PreviousAutoComplete, MarkerState, MarkerHandler, PreviousEditPolyLine, PreviousStateMarker, MarkerSate,
-// } from './interfaces/MarkerState';
-
-import {setGeoCtrl} from './controls/GeoControl';
-import {setScaleCtrl} from './controls/ScaleControl';
-import {setOverviewMapCtrl} from './controls/OverviewMapControl';
-import {setNavigationCtrl} from './controls/NavigationControl';
-import {MarkerIcon, RouteEditMode} from "./enum/ControlAnchor";
-import {BaiduMap} from "./components/map";
-import {PreviousPolygon} from "./interfaces/PreviousPolygon";
-import {createMarker} from "./CoreOperations";
-import {EditRoute, EditRouteRxState} from "./components/editRoute";
-import {EditRouteActions} from "./components/editRoute.actions";
-import {switchMap} from "rxjs/operator/switchMap";
-import {MarkerHandler, MarkerSate, PreviousEditPolyLine, PreviousStateMarker} from "./interfaces/PreviousMarker";
+import {RouteEditMode} from './enum/ControlAnchor';
+import {createMarker} from './CoreOperations';
+import {EditRouteRxState} from './components/editRoute';
+import {MarkerHandler, MarkerSate, PreviousEditPolyLine, PreviousStateMarker} from './interfaces/PreviousMarker';
 
       let getAllWaitPointsBetweenPoints = function (point1, point2, point_list) {
         let startIndex = undefined;
@@ -178,12 +166,15 @@ function drawCurrentPoint4(startOption: MarkerOptions, map: any,previousMarkers:
     route._getPolyLine().forEach((res) => {
         map.removeOverlay(res.polyLine);
     });
-    let a = previousMarkers.currentPoints.map(res => {return res.marker.getPosition()})
-    let eP = new BMap.Point(startOption.longitude, startOption.latitude);
+
+    let start = new BMap.Point(startOption.longitude, startOption.latitude);
+    let end = previousMarkers.currentPoints.map(res => res.marker.getPosition());
+
+    // let a = previousMarkers.currentPoints.map(res => {return res.marker.getPosition()})
     // let b = [eP].concat(a);
-    let b = ([a]).concat(eP);
+    // [eP].reverse().concat(a)
     let polylines = new BMap.Polyline(
-        b,
+        [start].concat(end),
         {
             strokeColor: 'red',
             strokeWeight: 3,
@@ -457,10 +448,15 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
     let onMenuItemRemovePointListener = function () {
         let marker = new BMap.Marker(this.getPosition(), {icon: trace_point_icon});
         route.addToCurrentPoints(marker);
-        // console.log('markerClusterer.removeMarker');
         markerClusterer.removeMarker(marker);
-        // console.log('map.removeremoveOverlay');
         map.removeOverlay(this);
+    }
+
+    let onMenuItemRemoveStartPointListener = function () {
+        // let marker = new BMap.Marker(this.getPosition(), {icon: trace_point_icon});
+        // route.addToCurrentPoints(marker);
+        // markerClusterer.removeMarker(marker);
+        // map.removeOverlay(this);
     }
 
     let onMenuItemSetUnStartListener = function () {
@@ -581,10 +577,8 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
                             marker2.setIcon(start_marker_icon);
                             cxm = new BMap.ContextMenu();
                             let item_un_start = new BMap.MenuItem('取消设为起点', onMenuItemSetUnStartListener.bind(marker2));
-
-                            let remove = new BMap.MenuItem('删除该点', onMenuItemRemovePointListener.bind(marker2));
+                            let remove = new BMap.MenuItem('删除该点',onMenuItemRemoveInLineDestinationListener.bind(marker2));
                             cxm.addItem(remove);
-
                             cxm.addItem(item_un_start);
                             marker2.addContextMenu(cxm);
 
@@ -592,17 +586,12 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
                             marker2.setIcon(destination_marker_icon);
                             cxm = new BMap.ContextMenu();
                             let item_un_end = new BMap.MenuItem('取消设为终点', onMenuItemUnSetDestinationListener.bind(marker2));
-
-
-                            let remove = new BMap.MenuItem('删除该点', onMenuItemRemovePointListener.bind(marker2));
+                            let remove = new BMap.MenuItem('删除该点', onMenuItemRemoveInLineDestinationListener.bind(marker2));
                             cxm.addItem(remove);
                             cxm.addItem(item_un_end);
                             marker2.addContextMenu(cxm);
-
                         } else {
-
                             cxm = new BMap.ContextMenu();
-
                             if (index === count) {
                                 marker2.setIcon(route_end_icon)
                                 let item_start = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
@@ -614,7 +603,9 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
                             }else if (index  === 0) {
                                 marker2.setIcon(route_start_icon);
                                 let item_destination = new BMap.MenuItem('设为起点', onMenuItemSetStartListener.bind(marker2));
+                                let item_remove_end = new BMap.MenuItem('删除该点',onMenuItemRemoveInLineDestinationListener.bind(marker2));
                                 cxm.addItem(item_destination);
+                                cxm.addItem(item_remove_end);
 
                             } else {
                                 marker2.setIcon(trace_point_icon);
@@ -622,7 +613,8 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
                                 let item_destination = new BMap.MenuItem('设为终点', onMenuItemSetDestinationListener.bind(marker2));
                                 cxm.addItem(item_start);
                                 cxm.addItem(item_destination);
-                                if( state.startIndex && state.endIndex &&  state.startIndex < index && index < state.endIndex) {
+                                let rBoolean = (state.startIndex !== -1) && state.endIndex &&  state.startIndex < index && index < state.endIndex;
+                                if(rBoolean) {
                                     let item_remove_end = new BMap.MenuItem('删除该点',onMenuItemRemoveInLineDestinationListener.bind(marker2));
                                     cxm.addItem(item_remove_end)
                                 }
@@ -715,7 +707,6 @@ export const redrawEditState = function (map: any,  markerClusterer: any,  previ
         if(state.editMode === RouteEditMode.SET_ADD_MARKER_AFTER_DES ) {
             map.addEventListener('click', markClickAddDestination);
             route.addMarkerListener(markClickAddDestination);
-
         } else if(state.editMode === RouteEditMode.SET_ADD_MARKER_BEFORE_START) {
             map.addEventListener('click', markClickAddBeforeStart);
             route.addMarkerListener(markClickAddBeforeStart);

@@ -64,7 +64,7 @@
     "style-loader": "^0.18.2",
     "ts-loader": "2.2.0",
     "typescript": "~2.3.4",
-    "u-clarity-angular": "^0.10.0-alpha.9",
+    "u-clarity-angular": "^0.10.0-alpha.12",
     "u-clarity-icons": "^0.10.0-alpha.9",
     "u-clarity-ui": "^0.10.0-alpha.9",
     "unminified-webpack-plugin": "^1.2.0",

@@ -4,11 +4,11 @@ import {
 } from '@angular/core';
 
 import {MapOptions, OfflineOptions, MarkerOptions} from '../interfaces/Options';
-import { MapStatus } from '../enum/MapStatus';
-import { defaultOfflineOpts, defaultOpts } from '../defaults';
-import { loader } from '../Loader';
+import {MapStatus} from '../enum/MapStatus';
+import {defaultOfflineOpts, defaultOpts} from '../defaults';
+import {loader} from '../Loader';
 import {Store} from '@ngrx/store';
-import { Action } from '@ngrx/store';
+import {Action} from '@ngrx/store';
 import {
     reCenter, redrawMarkers, createInstance, redrawPolyline, createAutoComplete,
     reCheckEditPolygon, reCreatePolygon, createMarkerEdit, createMarker, createInstanceMarkerClusterer
@@ -32,9 +32,9 @@ export interface EditRouteRxState {
     endIndex: number;
     markers: MarkerOptions[];
     stops: MarkerOptions[];
-    viewports : {
-    longitude: number;
-    latitude: number;
+    viewports: {
+        longitude: number;
+        latitude: number;
     }[],
     routes: {
         longitude: number;
@@ -61,7 +61,7 @@ export interface EditRouteRxState {
         .offlineLabel {
             font-size: 30px;
         }
-        
+
         .applyOrCancel {
             margin-left: 30px;
         }
@@ -128,178 +128,169 @@ export interface EditRouteRxState {
             border-top-color: rgb(37, 40, 39);
 
         }
-        
+
         #fixHandleBar button {
             padding-left: 0;
             font-size: 16px;
             padding-right: 0;
             min-width: 35px;
         }
-        
+
         .mapView {
             width: calc(100vw - 880px);
             height: 484px;
         }
-        
+
         .svg-save {
             color: rgb(0, 203, 129);
             font-size: 54px;
         }
-        
+
         .svg-cancel {
             color: rgb(252, 143, 71);
             font-size: 54px;
         }
-        
+
         #fixHandleBar button#saveBtn {
             font-size: 14px;
             background-color: rgb(0, 203, 129);
-            
             width: 54px;
-            
             border-style: none;
-        /*rgb(0, 203, 129)*/
-            /*font-size: 14px;*/
-            /*line-height: 30px;*/
             line-height: 30px;
             border-radius: 15px;
             font-weight: 600;
         }
-        
-
     `],
     template: `
 
         <div id="fixHandleBar" *ngIf="state">
-
-            <!--<clr-icon shape="sync">-->
-            <!--</clr-icon>-->
             <clr-tooltip>
-                
-            <button id = "saveBtn" class=" btn btn-primary" (click)="save($event)" clrTooltipTrigger  [disabled]="state.editMode !== -1">
-                保存
-            </button>
-                
+                <button id="saveBtn" class=" btn btn-primary" (click)="save($event)" clrTooltipTrigger
+                        [disabled]="state.editMode !== -1">
+                    保存
+                </button>
+
                 <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                     <span>提交并保存</span>
                 </clr-tooltip-content>
             </clr-tooltip>
-            
-            <div class="startText " [ngClass]="{'active': state.startIndex !== -1}" (click)="panToStart($event)">起点</div>
+
+            <div class="startText " [ngClass]="{'active': state.startIndex !== -1}" (click)="panToStart($event)">起点
+            </div>
             <div id="leftStartCircle lineInfo" class="circle" [ngClass]="{'active': state.startIndex !== -1}"></div>
             <div class="edit-line-status"
                  [class.active]=" state.endIndex !== -1 && state.startIndex !== -1"></div>
-            
+
             <div id="rightEndCircle lineInfo" class="circle"
                  [ngClass]="{'active': state.endIndex !== -1}"
             ></div>
 
-            <div class="startText" [ngClass]="{'active': state.endIndex !== -1}"  (click)="panToEnd($event)">终点</div>
-
-
-            <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex === -1 && state.startIndex ===  -1 && state.markers.length ===0 )}">
+            <div class="startText" [ngClass]="{'active': state.endIndex !== -1}" (click)="panToEnd($event)">终点</div>
+            <div class="lineEditArea"
+                 [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex === -1 && state.startIndex ===  -1 && state.markers.length ===0 )}">
                 <clr-tooltip>
-                        <clr-icon   shape="addCircle" size="18" clrTooltipTrigger  (click)="_draw2AddInitial()" >
-                        </clr-icon>
+                    <clr-icon shape="addCircle" size="18" clrTooltipTrigger (click)="_draw2AddInitial()">
+                    </clr-icon>
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>首次添加轨迹点</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
             </div>
 
-            <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.startIndex !== -1 && state.startIndex === 0 ) && state.endIndex == -1}">
+            <div class="lineEditArea"
+                 [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.startIndex !== -1 && state.startIndex === 0 && state.endIndex == -1 )}">
                 <clr-tooltip>
-                    <clr-icon   shape="addCircle" size="18" clrTooltipTrigger  (click)="_draw2BeforeStart()">
+                    <clr-icon shape="addCircle" size="18" clrTooltipTrigger (click)="_draw2BeforeStart()">
                     </clr-icon>
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>在起始点前方添加轨迹点</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
             </div>
-            
-            <div class="lineEditArea" [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex !== -1 && state.endIndex === (state.markers.length -1) && state.startIndex ===  -1)}">
+
+            <div class="lineEditArea"
+                 [ngClass]="{'ui-hide': state.editMode !== -1 || !(state.endIndex !== -1 && state.endIndex === (state.markers.length -1) && state.startIndex ===  -1)}">
                 <clr-tooltip>
-                        <clr-icon   shape="addCircle" size="18" clrTooltipTrigger  (click)="_draw2AddAfterDes()">
-                        </clr-icon>
+                    <clr-icon shape="addCircle" size="18" clrTooltipTrigger (click)="_draw2AddAfterDes()">
+                    </clr-icon>
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>追加轨迹点</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
             </div>
-            
-            <div class="lineEditArea" [ngClass]="{'ui-hide': state.startIndex === -1 || state.endIndex === -1 || state.editMode !== -1}">
-                    <clr-tooltip>
-                        <!--<button class="btn btn-primary" >-->
-                        <clr-icon   shape="baidu-recommend" size="18" (click)="_drawSearch()" clrTooltipTrigger >
-                        </clr-icon>
-                        <!--</button>-->
-                        <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
-                            <span>百度地图推荐</span>
-                        </clr-tooltip-content>
-                    </clr-tooltip>
+
+            <div class="lineEditArea"
+                 [ngClass]="{'ui-hide': state.startIndex === -1 || state.endIndex === -1 || state.editMode !== -1}">
                 <clr-tooltip>
-                    
-                <!--<button class="btn btn-primary" >-->
-                    <clr-icon shape="straight-line"  size="18" (click)="_drawStraight()" clrTooltipTrigger >
+                    <!--<button class="btn btn-primary" >-->
+                    <clr-icon shape="baidu-recommend" size="18" (click)="_drawSearch()" clrTooltipTrigger>
                     </clr-icon>
-                <!--</button>-->
+                    <!--</button>-->
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>百度地图推荐</span>
+                    </clr-tooltip-content>
+                </clr-tooltip>
+                <clr-tooltip>
+
+                    <clr-icon shape="straight-line" size="18" (click)="_drawStraight()" clrTooltipTrigger>
+                    </clr-icon>
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>直线连接</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
 
-                <clr-tooltip>
-
-                <!--<button class="btn btn-primary" >-->
-                    <clr-icon shape="addCircle" size="18" (click)="_draw2Add()" clrTooltipTrigger >
+                <clr-tooltip *ngIf="state.startIndex === state.endIndex - 1;else showEditRoutePointMode">
+                    <clr-icon shape="addCircle" size="18" (click)="_draw2Add()" clrTooltipTrigger>
                     </clr-icon>
-                <!--</button>-->
                     <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>新增轨迹点</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
-                
+
+                <ng-template #showEditRoutePointMode>
+                    <clr-tooltip>
+                        <clr-icon shape="addCircle" size="18" (click)="_draw2Add()" clrTooltipTrigger>
+                        </clr-icon>
+                        <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                            <span>修改轨迹点</span>
+                        </clr-tooltip-content>
+                    </clr-tooltip>
+                </ng-template>
             </div>
 
             <clr-tooltip>
-                <!--<button class="btn btn-primary" >-->
-                <clr-icon shape="help-baidu" size="18" (click)="openHelp($event)" clrTooltipTrigger >
+                <clr-icon shape="help-baidu" size="18" (click)="openHelp($event)" clrTooltipTrigger>
                 </clr-icon>
-                <!--</button>-->
                 <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                     <span>打开帮助</span>
                 </clr-tooltip-content>
             </clr-tooltip>
-            
+
             <div class="applyOrCancel" [class.ui-hide]="state.editMode === -1">
                 <clr-tooltip>
-                <!--<button class="btn btn-primary" >-->
-                    <clr-icon shape="svg-save" class="svg-save" size="54"  (click)="_applyChange()" clrTooltipTrigger >
+                    <clr-icon shape="svg-save" class="svg-save" size="54" (click)="_applyChange()" clrTooltipTrigger>
                     </clr-icon>
-                <!--</button>-->
-                    <clr-tooltip-content clrPosition="top-right"   clrSize="xs" *clrIfOpen>
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
                         <span>应用</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
-                
-                <!--<button class="btn btn-primary"  uTooltip="取消" tooltipPosition="bottom"  target="body">-->
-                    <clr-tooltip>
-                        
-                    <clr-icon shape="svg-cancle"  class="svg-cancel" size="54" (click)="_applyCancel()"  clrTooltipTrigger >
+
+                <clr-tooltip>
+                    <clr-icon shape="svg-cancle" class="svg-cancel" size="54" (click)="_applyCancel()"
+                              clrTooltipTrigger>
                     </clr-icon>
 
-                        <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
-                            <span>取消</span>
-                        </clr-tooltip-content>
-                        
-                    </clr-tooltip>
-                <!--</button>-->
+                    <clr-tooltip-content clrPosition="top-right" clrSize="xs" *clrIfOpen>
+                        <span>取消</span>
+                    </clr-tooltip-content>
+
+                </clr-tooltip>
             </div>
         </div>
         <div id="container" #map class="mapView">
 
         </div>
-        <clr-modal [(clrModalOpen)]="isLoading" clrModalSize='sm'  [clrModalClosable]="false">
+        <clr-modal [(clrModalOpen)]="isLoading" clrModalSize='sm' [clrModalClosable]="false">
             <h3 class="modal-title"></h3>
             <div class="modal-body model-center">
                 <span class="spinner spinner-inline">
@@ -335,10 +326,9 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     map: any;
 
 
-    markerClusterer : any;
+    markerClusterer: any;
 
     offlineWords: string;
-    // previousMarkers: MarkerState[] = [];
     previousAutoComplete: PreviousAutoComplete;
     previousPolyLine: PreviousEditPolyLine;
     previousPolygon: PreviousPolygon;
@@ -350,7 +340,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
         let index = this.state.markers.length - 1;
 
-        if(this.state.endIndex !== -1) {
+        if (this.state.endIndex !== -1) {
             index = this.state.endIndex;
         }
 
@@ -359,29 +349,23 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         this.map.setZoom(18);
         this.map.panTo(new BMap.Point(a.longitude, a.latitude));
 
-        if(event) {
+        if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
     }
+
     panToStart(event) {
         var BMap: any = (<any>window)['BMap'];
-        let  a = 0;
-        if(this.state.startIndex !== -1) {
+        let a = 0;
+        if (this.state.startIndex !== -1) {
             a = this.state.startIndex;
         }
-            // let a = this.state.markers[this.state.startIndex]
-            // this.map.panTo(new BMap.Point(a.longitude, a.latitude))
-        // }else {
-        //     let a = this.state.markers[this.state.startIndex]
-        //     this.map.panTo(new BMap.Point(a.longitude, a.latitude))
-        // }
-
-                let marker = this.state.markers[a]
+        let marker = this.state.markers[a]
         this.map.setZoom(18);
-                this.map.panTo(new BMap.Point(marker.longitude, marker.latitude));
+        this.map.panTo(new BMap.Point(marker.longitude, marker.latitude));
 
-        if(event) {
+        if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
@@ -397,11 +381,11 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     public state: EditRouteRxState;
     public map$: Observable<EditRouteRxState>;
 
-    private _subscription : Subscription;
+    private _subscription: Subscription;
 
     constructor(private el: ElementRef,
                 private _ngZone: NgZone,
-                private action:EditRouteActions,
+                private action: EditRouteActions,
                 private cd: ChangeDetectorRef,
                 private store: Store<StoneState>) {
 
@@ -410,9 +394,22 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         });
     }
 
-    public panTo(event, $event) {
+    public panTo(event, {isOpenWindow, title }, $event) {
         var BMap: any = (<any>window)['BMap'];
-        this.map.panTo(new BMap.Point(event.lng, event.lat))
+        //this.map.panTo()
+        let point = new BMap.Point(event.lng, event.lat);
+        this.map.centerAndZoom(point, 17)
+
+        if(isOpenWindow) {
+            let msg = `<p>${ title || ''}</p><p>${ ''}</p>`;
+            let infoWindow2 = new BMap.InfoWindow(msg, {
+            });
+            let a = this.previousMarkers.stops.filter((res) => res.marker.getPosition().equals(point))[0]
+            if(a) {
+                console.log('open Info: ' + title);
+                a.marker.openInfoWindow(infoWindow2);
+            }
+        }
     }
 
     ngOnInit() {
@@ -433,15 +430,15 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         }
 
         let needLoading = false;
-        if(s.markers.length > 500) {
+        if (s.markers.length > 500) {
             needLoading = true;
         }
 
-        if(needLoading) {
+        if (needLoading) {
             this.isLoading = true;
         }
 
-        redrawEditState.bind(this)(this.map, this.markerClusterer,  this.previousMarkers, s);
+        redrawEditState.bind(this)(this.map, this.markerClusterer, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s);
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s);
         redrawStops.bind(this)(this.map, this.previousMarkers, s);
@@ -479,26 +476,26 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
 
 
-
     _draw() {
         // let options: MapOptions = Object.assign({}, defaultOpts, {
         //     center: initialState.
         // });
         // map.centerAndZoom(new BMap.Point(opts.center.longitude, opts.center.latitude), opts.zoom);
-        let options:MapOptions = {...defaultOpts,
+        let options: MapOptions = {
+            ...defaultOpts,
             center: {
                 // ,
                 longitude: 114.084272,
                 // initialState.longitue,
-                latitude:22.541915
+                latitude: 22.541915
                 // initialState.latitude,
             }
         }
 
-            // this.options);
+        // this.options);
 
         this.map = createInstance(options, this.mapChild.nativeElement);
-        this.markerClusterer = createInstanceMarkerClusterer (this.map)
+        this.markerClusterer = createInstanceMarkerClusterer(this.map)
         this.map.addEventListener('click', e => {
             this.onClicked.emit(e);
         });
@@ -516,19 +513,19 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     _drawStraight() {
         // var markerLab : any = (<any>window)['BMapLib']
         // var markerClusterer;
-        this.previousMarkers.currentPoints =[];
-        for(let i =0;i < this.previousMarkers.markers.length ; i ++ ) {
-           if(this.state.startIndex < i && i < this.state.endIndex) {
-               let marker = this.previousMarkers.markers[i].marker;
-               // console.log(marker);
+        this.previousMarkers.currentPoints = [];
+        for (let i = 0; i < this.previousMarkers.markers.length; i++) {
+            if (this.state.startIndex < i && i < this.state.endIndex) {
+                let marker = this.previousMarkers.markers[i].marker;
+                // console.log(marker);
 
-               // if(markerLab && markerLab.MarkerClusterer) {
-               //     markerClusterer
-               this.map.removeOverlay(marker);
-               this.markerClusterer.removeMarker(marker)
-               // }else {
-               // }
-           }
+                // if(markerLab && markerLab.MarkerClusterer) {
+                //     markerClusterer
+                this.map.removeOverlay(marker);
+                this.markerClusterer.removeMarker(marker)
+                // }else {
+                // }
+            }
         }
 
         // let i = this.previousMarkers.markers.find(res => res.marker.getPosition() === point);
@@ -557,7 +554,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
 
     _removeEnd1(point: any) {
-        this.previousMarkers.currentPoints =[];
+        this.previousMarkers.currentPoints = [];
         let i = this.previousMarkers.markers.find(res => res.marker.getPosition() === point);
         this.addToCurrentPoints(i.marker);
         this.store.dispatch(
@@ -566,7 +563,7 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
 
     _removeEnd(point: any) {
-        this.previousMarkers.currentPoints =[];
+        this.previousMarkers.currentPoints = [];
         let i = this.previousMarkers.markers.find(res => res.marker.getPosition() === point);
         this.addToCurrentPoints(i.marker);
         this.store.dispatch(
@@ -635,8 +632,9 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
     }
 
     _draw2BeforeStart() {
+        this.previousMarkers.currentPoints = [];
+        this.previousMarkers.currentPoints.length = 0;
         this.store.dispatch(this.action.setEnableAddMarkerBeforeStart());
-        // this.store.dispatch(this.action.setEnableAddMarkerAfterDestination());
     }
 
     addToCurrentPoints(marker) {
@@ -658,13 +656,12 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         return this.previousMarkers;
     }
 
-    openHelp(){
+    openHelp() {
         this.onHelpClicked.emit('');
     }
 
     ngOnDestroy(): void {
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, this.state);
-        // this.store.dispatch(this.action.setClear());
         if (this._subscription) {
             this._subscription.unsubscribe();
             this._subscription.unsubscribe();

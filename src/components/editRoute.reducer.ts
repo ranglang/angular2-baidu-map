@@ -1,10 +1,8 @@
-
 import {EditRouteRxState} from "./editRoute";
 import {MarkerIcon, RouteEditMode} from "../enum/ControlAnchor";
 import {EditRouteActions} from "./editRoute.actions";
 import {MapOptions} from "../interfaces/Options";
 import {MarkerSate} from "../interfaces/PreviousMarker";
-import {BaiduMap} from "./map";
 
 export const initialState: EditRouteRxState  = {
     startIndex: -1,
@@ -18,7 +16,6 @@ export const initialState: EditRouteRxState  = {
     editMode: RouteEditMode.SELECT_MODE,
 }
 
-
 function filterAnable(state: EditRouteRxState): EditRouteRxState {
 
     return {...state,
@@ -26,16 +23,9 @@ function filterAnable(state: EditRouteRxState): EditRouteRxState {
             autoDisplayInfoWindow: false
         }))
     }
-
-    // return state;
 }
 
 export function editRouteReducer(state = initialState, action: any): EditRouteRxState {
-
-
-
-
-
     switch (action.type) {
         case EditRouteActions.SET_CLEAR: {
             return {...state, markers: [], startIndex: -1, endIndex: -1, polyLine: [], enableSearch: false}
@@ -54,8 +44,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
         case  EditRouteActions.UPDATE_ROUTE_POINT: {
             let routePointList = action.payload;
-
-
             let a = {...state,
                 markers: routePointList.map(res => ({
                           longitude: res.lng,
@@ -64,9 +52,7 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                         })),
                 startIndex: -1,
                 endIndex: -1,
-                // stops: mapOpts.stops,
-                // viewports: mapOpts.markers
-            }
+            };
             return filterAnable(a)
         }
 
@@ -170,7 +156,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
 
         case EditRouteActions.APPLY_CHANGE: {
             switch (state.editMode) {
-
                 case RouteEditMode.SET_ADD_INITIAL_MARKER: {
                     let s = action.payload as MarkerSate[]
                     let c = s.map(item => {
@@ -180,15 +165,11 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                             category: MarkerIcon.ROUTE
                         }
                     });
-
-                    // let r = (state.markers.concat(c));
-
                     return {...state,
                         enableMarkerClick: false,
                         editMode: RouteEditMode.SELECT_MODE,
                         markers: c,
                         endIndex:  - 1
-                        // state.endIndex + c.length
                     }
                 }
                 case RouteEditMode.SET_ADD_MARKER_BEFORE_START: {
@@ -207,7 +188,6 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                         enableMarkerClick: false,
                         editMode: RouteEditMode.SELECT_MODE,
                         markers: r,
-                        // endIndex: state.endIndex + c.length
                         startIndex: 0
                     }
                 }
@@ -262,20 +242,20 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                 case RouteEditMode.SET_EDIT_REMOVE: {
                     var BMap: any = (<any>window)['BMap'];
 
-                    let s = action.payload as MarkerSate[]
-                    let pos = s.map((res) => res.marker.getPosition())
+                    let s = action.payload as MarkerSate[];
+                    let pos = s.map((res) => res.marker.getPosition());
 
                     let newS = state.markers.filter((res) => {
                         let a = pos.findIndex(p => p.equals(new BMap.Point(res.longitude, res.latitude)));
                        return  a === -1
                     });
 
-                    // let a = state.markers.slice(0, state.startIndex + 1);
-                    // let b = state.markers.slice(state.endIndex);
                     return {
                         ...state, enableSearch: false,
                         markers: newS,
                         editMode: RouteEditMode.SELECT_MODE,
+                        endIndex : -1,
+                        startIndex: -1
                     };
                 }
                 case RouteEditMode.DRIVIVE_ROUTE: {
@@ -320,10 +300,9 @@ export function editRouteReducer(state = initialState, action: any): EditRouteRx
                     return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, enableMarkerClick: false};
                 }
                 case RouteEditMode.SET_EDIT_REMOVE: {
-                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, enableMarkerClick: false};
+                    return {...state, enableSearch: false, editMode: RouteEditMode.SELECT_MODE, enableMarkerClick: false, endIndex : -1, startIndex: -1};
                 }
                 default: {
-                    // console.log(state.editMode);
                     return state;
                 }
             }

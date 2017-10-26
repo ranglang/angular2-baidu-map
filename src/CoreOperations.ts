@@ -416,34 +416,39 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
         let previousMarker: MarkerSate = { marker: marker2, listeners: [], contextmenu: undefined };
         previousMarkers.push(previousMarker);
 
-        let onMarkerClickedListener = () => {
-            self.onMarkerClicked.emit(marker2);
-        };
-        marker2.addEventListener('click', onMarkerClickedListener);
 
         let onMarkerDraggedListener = () => {
             self.onMarkerDragged.emit(marker2);
         };
         marker2.addEventListener('dragend', onMarkerDraggedListener);
-
-        previousMarker.listeners.push(onMarkerClickedListener);
         previousMarker.listeners.push(onMarkerDraggedListener);
 
         if (!marker.title && !marker.content) {
-            return;
+            console.log('has title & content');
+            let msg = `<p>${marker.title || ''}</p><p>${marker.content || ''}</p>`;
+            let infoWindow2 = new BMap.InfoWindow(msg, {
+                enableMessage: !!marker.enableMessage
+            });
+            if (marker.autoDisplayInfoWindow) {
+                marker2.openInfoWindow(infoWindow2);
+            }
+            let openInfoWindowListener = function() {
+                console.log('openInfoWindow');
+                this.openInfoWindow(infoWindow2);
+                // self.onMarkerClicked.emit(marker2);
+            };
+
+            marker2.addEventListener('click', openInfoWindowListener);
+            previousMarker.listeners.push(openInfoWindowListener);
+        } else {
+            console.log('no title & content');
+            let onMarkerClickedListener = () => {
+                console.log('onMarkerClickedListener  no title & content');
+                self.onMarkerClicked.emit(marker2);
+            };
+            marker2.addEventListener('click', onMarkerClickedListener);
+            previousMarker.listeners.push(onMarkerClickedListener);
         }
-        let msg = `<p>${marker.title || ''}</p><p>${marker.content || ''}</p>`;
-        let infoWindow2 = new BMap.InfoWindow(msg, {
-            enableMessage: !!marker.enableMessage
-        });
-        if (marker.autoDisplayInfoWindow) {
-            marker2.openInfoWindow(infoWindow2);
-        }
-        let openInfoWindowListener = function() {
-            this.openInfoWindow(infoWindow2);
-        };
-        previousMarker.listeners.push(openInfoWindowListener);
-        marker2.addEventListener('click', openInfoWindowListener);
     });
 
 

@@ -1,6 +1,6 @@
 import {
     Component, SimpleChange, Input, Output, EventEmitter, OnInit, OnChanges, ChangeDetectionStrategy, ElementRef,
-    ContentChild, ViewChild
+    ContentChild, ViewChild, OnDestroy
 } from '@angular/core';
 import {
 redrawStops
@@ -22,8 +22,8 @@ import {MarkerSate, PreviousAutoComplete} from "../interfaces/PreviousMarker";
 
 
 
+//changeDetection: ChangeDetectionStrategy.OnPush,
 @Component({
-    changeDetection: ChangeDetectionStrategy.OnPush,
     selector: 'baidu-map',
     styles: [`
         .offlinePanel{
@@ -69,7 +69,6 @@ import {MarkerSate, PreviousAutoComplete} from "../interfaces/PreviousMarker";
         <!--{{isLoading}}-->
         <div class="mapView" #mapView>
         </div>
-        
         <clr-modal [(clrModalOpen)]="isLoading" clrModalSize='sm'  [clrModalClosable]="false">
             <h3 class="modal-title"></h3>
             <!--I have a nice title-->
@@ -85,7 +84,7 @@ import {MarkerSate, PreviousAutoComplete} from "../interfaces/PreviousMarker";
         </clr-modal>
     `
 })
-export class BaiduMap implements OnInit, OnChanges {
+export class BaiduMap implements OnInit, OnChanges, OnDestroy {
 
     @Input() ak: string;
     @Input() protocol: string;
@@ -143,8 +142,6 @@ export class BaiduMap implements OnInit, OnChanges {
             this.isLoading = true;
         }
 
-        console.log('changed');
-        console.log( opts);
         reCenter(this.map, opts);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, opts);
 
@@ -156,7 +153,6 @@ export class BaiduMap implements OnInit, OnChanges {
 
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, opts)
 
-        // redrawStops.bind(this)(this.map, this.previousPolygon, opts)
 
         if(needLoading) {
         setTimeout(() => {
@@ -165,13 +161,33 @@ export class BaiduMap implements OnInit, OnChanges {
         }
     }
 
+    a() {
+        this._draw();
+    }
     updatePolygonInfo(any) {
         this.previousPolygon = any;
     }
 
-    public panTo(event, $event) {
+    // isOpenWindow ?: boolean = false
+    public panTo(event, {isOpenWindow, title } , $event,) {
         var BMap: any = (<any>window)['BMap'];
-        this.map.panTo(new BMap.Point(event.lng, event.lat))
+        let point = new BMap.Point(event.lng, event.lat);
+        console.log('panTo: ');
+        console.log(point);
+        //this.map.set(point)
+        this.map.centerAndZoom(point, 16);
+
+        //marker2.openInfoWindow(infoWindow2);
+        if(isOpenWindow) {
+            let msg = `<p>${ title || ''}</p><p>${ ''}</p>`;
+            let infoWindow2 = new BMap.InfoWindow(msg, {
+            });
+            let a = this.previousMarkers.filter((res) => res.marker.getPosition().equals(point))[0]
+            if(a) {
+                console.log('open Info: ' + title);
+                a.marker.openInfoWindow(infoWindow2);
+            }
+        }
     }
 
     _draw() {
@@ -181,8 +197,6 @@ export class BaiduMap implements OnInit, OnChanges {
             this.onClicked.emit(e);
         });
         this.onMapLoaded.emit(this.map);
-        console.log('draw');
-        console.log(options);
         reCenter(this.map, options);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, options);
         redrawPolyline.bind(this)(this.map, this.polyline, options)
@@ -190,6 +204,16 @@ export class BaiduMap implements OnInit, OnChanges {
         reCheckEditPolygon.bind(this)(this.map, this.previousPolygon, options)
         reCreatePolygon.bind(this)(this.map, this.previousPolygon, options)
         reCenter(this.map, options);
+    }
+
+    ngOnDestroy(): void {
+
+
+        //redrawDriveRoute.bind(this)(this.map, this.previousMarkers, this.state);
+/*        if (this._subscription) {
+            this._subscription.unsubscribe();
+            this._subscription.unsubscribe();
+        }*/
     }
 }
 

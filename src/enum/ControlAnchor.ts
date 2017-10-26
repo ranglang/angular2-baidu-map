@@ -22,7 +22,7 @@ export enum RouteEditMode {
     SET_AND_MARKER = 3,
     SET_ADD_MARKER_AFTER_DES =4,
     SET_ADD_INITIAL_MARKER = 5,
-
     SET_EDIT_REMOVE = 6,
     SET_ADD_MARKER_BEFORE_START =7,
+    SET_REMOVE_START_START = 8, //删除线段起点模式
 }
