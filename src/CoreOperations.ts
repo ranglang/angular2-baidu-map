@@ -20,8 +20,10 @@ export const reCenter = function(map: any, opts: MapOptions) {
         if(opts.viewports && opts.viewports.length > 0){
             map.setViewport(opts.viewports.map(marker => new BMap.Point(marker.longitude, marker.latitude)));
         } else {
+            console.log('没有viewports');
             if( (opts.center.latitude !== undefined) && (opts.center.longitude !== undefined)) {
-                map.setCenter(new BMap.Point(opts.center.longitude, opts.center.latitude));
+                console.log('centerAndZoom: ' + opts.zoom);
+                map.centerAndZoom(new BMap.Point(opts.center.longitude, opts.center.latitude), opts.zoom);
             }
         }
     }
@@ -425,7 +427,7 @@ export const redrawMarkers = function(map: any, previousMarkers: MarkerSate[], o
 
         if (!marker.title && !marker.content) {
             console.log('has title & content');
-            let msg = `<p>${marker.title || ''}</p><p>${marker.content || ''}</p>`;
+            let msg = `<p>${marker.title || ''}</p><p>${parseFloat(marker.longitude.toString()).toFixed(7)  +  ', ' + parseFloat(marker.latitude.toString()).toFixed(7)}</p>`;
             let infoWindow2 = new BMap.InfoWindow(msg, {
                 enableMessage: !!marker.enableMessage
             });

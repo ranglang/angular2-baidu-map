@@ -142,6 +142,8 @@ export class BaiduMap implements OnInit, OnChanges, OnDestroy {
             this.isLoading = true;
         }
 
+        console.log('opts');
+        console.log(opts);
         reCenter(this.map, opts);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, opts);
 
@@ -179,7 +181,7 @@ export class BaiduMap implements OnInit, OnChanges, OnDestroy {
 
         //marker2.openInfoWindow(infoWindow2);
         if(isOpenWindow) {
-            let msg = `<p>${ title || ''}</p><p>${ ''}</p>`;
+            let msg = `<p>${ title || ''}</p><p>${parseFloat(event.lng.toString()).toFixed(7) +  ', ' + parseFloat(event.lat.toString()).toFixed(7) }</p>`;
             let infoWindow2 = new BMap.InfoWindow(msg, {
             });
             let a = this.previousMarkers.filter((res) => res.marker.getPosition().equals(point))[0]
@@ -196,6 +198,8 @@ export class BaiduMap implements OnInit, OnChanges, OnDestroy {
         this.map.addEventListener('click', e => {
             this.onClicked.emit(e);
         });
+        console.log('reCenter');
+        console.log(options);
         this.onMapLoaded.emit(this.map);
         reCenter(this.map, options);
         redrawMarkers.bind(this)(this.map, this.previousMarkers, options);

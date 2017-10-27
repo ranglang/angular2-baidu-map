@@ -396,15 +396,24 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     public panTo(event, {isOpenWindow, title }, $event) {
         var BMap: any = (<any>window)['BMap'];
-        //this.map.panTo()
-        let point = new BMap.Point(event.lng, event.lat);
+        let point = new BMap.Point(parseFloat(event.lng.toString()).toFixed(7) , parseFloat(event.lat.toString()).toFixed(7));
         this.map.centerAndZoom(point, 17)
 
         if(isOpenWindow) {
-            let msg = `<p>${ title || ''}</p><p>${ ''}</p>`;
+            let msg = `<p>${ title || ''}</p><p>${ parseFloat(event.lng.toString()).toFixed(7)  + ', ' + parseFloat(event.lat.toString()).toFixed(7)}</p>`;
             let infoWindow2 = new BMap.InfoWindow(msg, {
             });
-            let a = this.previousMarkers.stops.filter((res) => res.marker.getPosition().equals(point))[0]
+
+            console.log('this.previousMarkers');
+            console.log(this.previousMarkers);
+            let a = this.previousMarkers.stops.filter((res) =>{
+                console.log('res.marker.getPosition()')
+                console.log(res.marker.getPosition());
+
+                console.log(point);
+                return res.marker.getPosition().equals(point)
+            })[0]
+
             if(a) {
                 console.log('open Info: ' + title);
                 a.marker.openInfoWindow(infoWindow2);
@@ -419,7 +428,10 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
         this._subscription = this.map$.subscribe((res) => {
             this.state = res;
+            console.log('///////////////////////');
+            console.log(res);
             this._redrawState(res);
+
             // this.cd.markForCheck();
         })
     }
@@ -437,7 +449,6 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
         if (needLoading) {
             this.isLoading = true;
         }
-
         redrawEditState.bind(this)(this.map, this.markerClusterer, this.previousMarkers, s);
         redrawEditPolyline.bind(this)(this.map, this.previousMarkers, s);
         redrawDriveRoute.bind(this)(this.map, this.previousMarkers, s);
@@ -489,7 +500,8 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
                 // initialState.longitue,
                 latitude: 22.541915
                 // initialState.latitude,
-            }
+            },
+            zoom: 12,
         }
 
         // this.options);
@@ -586,6 +598,10 @@ export class EditRoute implements OnInit, OnChanges, OnDestroy {
 
     _updateMarkers(markers: any) {
         this.previousMarkers = {...this.previousMarkers, markers: markers}
+    }
+
+    _updateStops(markers: any) {
+        this.previousMarkers = {...this.previousMarkers, stops: markers}
     }
 
     // setEnableAddMarkerAfterDestination

@@ -320,7 +320,7 @@ export const redrawStops= function (map: any, previousMarkers: PreviousStateMark
             if (!marker.title && !marker.content) {
                 return;
             }
-            let msg = `<p>${marker.title || ''}</p><p>${marker.content || ''}</p>`;
+            let msg = `<p>${marker.title || ''}</p><p>${marker.longitude + ', ' + marker.latitude}</p>`;
             let infoWindow2 = new BMap.InfoWindow(msg, {
                 enableMessage: !!marker.enableMessage
             });
@@ -335,6 +335,7 @@ export const redrawStops= function (map: any, previousMarkers: PreviousStateMark
         })
 
     }
+    route._updateStops(previousMarkers.stops);
 }
 
 
